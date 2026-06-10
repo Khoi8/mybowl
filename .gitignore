@@ -1,0 +1,22 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build / test output
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# expo (added in later phases)
+.expo/
+*.orig.*
+
+# env / local
+.env
+.env.*
+!.env.example
+
+# os / editor
+.DS_Store
+*.log
