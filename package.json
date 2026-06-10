@@ -1,0 +1,24 @@
+{
+  "name": "bowli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline-first bowling performance tracker (monorepo root).",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
+    "eslint": "^9.18.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.21.0",
+    "vitest": "^3.2.4"
+  },
+  "packageManager": "pnpm@10.33.0"
+}

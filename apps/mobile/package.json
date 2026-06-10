@@ -1,0 +1,9 @@
+{
+  "name": "@bowli/mobile",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@bowli/shared": "workspace:*"
+  }
+}
