@@ -7,3 +7,4 @@ export * from './scoring';
 export * from './validation';
 export * from './splits';
 export * from './stats';
+export * from './headtohead';

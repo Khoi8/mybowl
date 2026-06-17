@@ -34,6 +34,7 @@ who did it, the gate result, and the commit.
 - **Commit:** `feat(domain): add recognized-split lookup (S1)` (PR #1).
 
 ## Iteration 2 — S2 solo stats domain
+
 - **Slice:** S2 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
 - **Scope:** `domain/stats.ts` — `computeGameStats`, `computeSeriesStats`,
   `aggregatePinLeaves`. Reuses `scoreGame` (never re-derives scores) and
@@ -43,7 +44,7 @@ who did it, the gate result, and the commit.
 - **Review:** PASS first pass. Null-not-NaN guarantee, "splits also count as
   spare attempts," derivation, and domain purity all verified.
 - **Design decisions recorded:**
-  - **Frame-10 strike% denominator:** each *fresh-rack* ball in the 10th is a
+  - **Frame-10 strike% denominator:** each _fresh-rack_ ball in the 10th is a
     first-ball opportunity (perfect game → 12 opps/12 strikes; all-spares →
     11 opps, strike% 0). Consciously chosen over the fixed-10 convention;
     documented in the module header. The stats-feature UI (S14) should note
@@ -56,5 +57,24 @@ who did it, the gate result, and the commit.
 - **Gate:** 81 tests passing; stats.ts 100% lines/functions (89% branches);
   typecheck, lint, format all green.
 - **Commit:** `feat(domain): add solo stats (S2)` (PR #1).
+
+## Iteration 3 — S3 head-to-head domain
+- **Slice:** S3 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
+- **Scope:** `domain/headtohead.ts` — `headToHead` (pair-by-order, drop trailing
+  remainder, W-L-T, avgMargin = self−opp, selfAvg/opponentAvg over paired
+  games), `withWithout` (partition sessions by opponent presence; per-game
+  averages + strike% via `computeSeriesStats`), `timesBowledWith`. Pure input
+  view types decouple the domain from DB rows. Test-first (16 cases).
+- **Review:** PASS first pass. Pairing/drop-remainder (no leak of dropped game),
+  margin sign (self-loss ⇒ negative), null-not-NaN, derivation, purity, and
+  guest-vs-self parity all verified.
+- **Decisions:** `timesBowledWith` counts sessions where both players have ≥1
+  game (a real shared outing); with/without averages are per-game means (not
+  series totals) for apples-to-apples comparison.
+- **Gate:** 97 tests passing; headtohead.ts 100% lines/functions (89% branches);
+  typecheck, lint, format all green.
+- **Commit:** `feat(domain): add head-to-head relational stats (S3)` (PR #1).
+- **Milestone:** the entire pure-domain core (scoring, validation, splits,
+  stats, head-to-head) is complete and proven — zero infra required.
 
 <!-- New iterations are appended below this line by the Tech Lead. -->
