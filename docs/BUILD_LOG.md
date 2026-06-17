@@ -79,6 +79,7 @@ who did it, the gate result, and the commit.
   stats, head-to-head) is complete and proven — zero infra required.
 
 ## Iteration 4 — S4 UUIDv7 id utility
+
 - **Slice:** S4 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
 - **Scope:** `apps/mobile/src/db/id.ts` — zero-dep inline UUIDv7 (`uuidv7`,
   `uuidv7At(ms)` for deterministic tests, `isUuidV7`). 48-bit big-endian ms
@@ -92,5 +93,29 @@ who did it, the gate result, and the commit.
   `tsconfig.json` include extended to `apps/mobile/src/db/**`.
 - **Gate:** 111 tests passing; typecheck, lint, format all green.
 - **Commit:** `feat(db): add UUIDv7 id generator (S4)` (PR #1).
+
+## Iteration 5 — S5 Drizzle SQLite schema
+- **Slice:** S5 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
+- **Scope:** `apps/mobile/src/db/schema.ts` — all 11 tables, driver-agnostic
+  (no expo-sqlite import). Identity model encoded: `games.playerId`→players
+  (never users), `games.ownerUserId`→users (recorder), `games.sessionId`
+  nullable (solo=null/one-participant); `players.userId` nullable (guest vs
+  linked), `players.isSelf`. **One-self-player** partial unique index
+  (`is_self=1 AND user_id IS NOT NULL AND deleted_at IS NULL`) — guests &
+  tombstones exempt. Sync columns on every table via `syncColumns()` helper
+  (UUIDv7 PK, updatedAt, deletedAt tombstone, syncStatus enum). Frame arrays as
+  JSON columns. In-memory better-sqlite3 round-trip tests (9 cases) deriving DDL
+  from the schema (forward-only honored).
+- **Deps:** +drizzle-orm (dep), +drizzle-kit/better-sqlite3/@types (dev).
+  Added `pnpm.onlyBuiltDependencies: [better-sqlite3, esbuild]` so the native
+  build is reproducible in CI/fresh installs (the dev had to approve it manually).
+- **Review:** PASS. Identity model + sync contract verified to spec and proven by
+  tests. Non-blocking note applied immediately (table is empty, forward-only):
+  **weight/lat/lng/ratio changed `integer`→`real`** to preserve fractional
+  precision before any data ships.
+- **Deferred:** per-package `apps/mobile/tsconfig.json` not created (root tsconfig
+  already typechecks `db/**`); root include for `sync/**` deferred to S17.
+- **Gate:** 118 tests passing; typecheck, lint, format all green.
+- **Commit:** `feat(db): add Drizzle SQLite schema with identity model + sync columns (S5)` (PR #1).
 
 <!-- New iterations are appended below this line by the Tech Lead. -->
