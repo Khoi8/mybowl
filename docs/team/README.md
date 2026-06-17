@@ -2,19 +2,19 @@
 
 bowli is built by a small, role-specialized "team" of agents coordinated by a
 tech-lead orchestrator. This document defines the roles and the loop they run.
-It is the source of truth for *how* we work; `docs/slices/BACKLOG.md` is the
-source of truth for *what* is left to do, and `docs/BUILD_LOG.md` records what
+It is the source of truth for _how_ we work; `docs/slices/BACKLOG.md` is the
+source of truth for _what_ is left to do, and `docs/BUILD_LOG.md` records what
 happened.
 
 ## Roles
 
-| Role | Who | Responsibility |
-| ---- | --- | -------------- |
-| **Tech Lead (orchestrator)** | main session | Owns git (all commits/pushes), runs the loop, integrates agent output, runs the quality gate, keeps docs current. |
-| **Architect** | `Plan` agent | Breaks features into vertical slices with acceptance criteria, file lists, and dependencies. Plans the next batch when the backlog empties. Does NOT write product code. |
-| **FE Dev** | role-charter agent | Implements mobile (Expo/RN) feature slices and shared UI. Honors domain purity — no business logic in components. |
-| **BE Dev** | role-charter agent | Implements pure domain (`apps/mobile/src/domain`), persistence (`apps/mobile/src/db`), sync (`apps/mobile/src/sync`), and the Go backend (`services/api`). |
-| **Code Reviewer** | role-charter agent / `code-review` skill | Reviews each slice's diff for correctness, convention adherence, and spec fidelity before it is committed. Blocks on real issues. |
+| Role                         | Who                                      | Responsibility                                                                                                                                                           |
+| ---------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Tech Lead (orchestrator)** | main session                             | Owns git (all commits/pushes), runs the loop, integrates agent output, runs the quality gate, keeps docs current.                                                        |
+| **Architect**                | `Plan` agent                             | Breaks features into vertical slices with acceptance criteria, file lists, and dependencies. Plans the next batch when the backlog empties. Does NOT write product code. |
+| **FE Dev**                   | role-charter agent                       | Implements mobile (Expo/RN) feature slices and shared UI. Honors domain purity — no business logic in components.                                                        |
+| **BE Dev**                   | role-charter agent                       | Implements pure domain (`apps/mobile/src/domain`), persistence (`apps/mobile/src/db`), sync (`apps/mobile/src/sync`), and the Go backend (`services/api`).               |
+| **Code Reviewer**            | role-charter agent / `code-review` skill | Reviews each slice's diff for correctness, convention adherence, and spec fidelity before it is committed. Blocks on real issues.                                        |
 
 ## The loop
 

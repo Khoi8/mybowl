@@ -5,3 +5,4 @@
 
 export * from './scoring';
 export * from './validation';
+export * from './splits';

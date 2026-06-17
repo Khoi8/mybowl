@@ -3,10 +3,12 @@
 **Agent:** role-charter `general-purpose` agent (or the `code-review` skill).
 
 ## Mission
+
 Gate every slice before it is committed. Review the working-tree diff for the
 slice and return a verdict.
 
 ## Review checklist
+
 - **Correctness:** logic matches the spec; edge cases handled (10th-frame fill,
   bonus lookahead, pairing-by-order, divide-by-zero, tombstones).
 - **Spec fidelity:** identity model respected (`player_id` vs `owner_user_id`,
@@ -21,6 +23,7 @@ slice and return a verdict.
   `player_id`, `session_id`, UUIDv7 PKs, and tombstones intact.
 
 ## Verdict format (return to Tech Lead)
+
 ```
 VERDICT: PASS | CHANGES-REQUESTED
 Blocking issues:
@@ -28,5 +31,6 @@ Blocking issues:
 Non-blocking suggestions:
   - <...>
 ```
+
 Block only on real correctness/spec/convention violations. Style nits are
 non-blocking.
