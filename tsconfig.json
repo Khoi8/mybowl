@@ -3,6 +3,10 @@
   "compilerOptions": {
     "types": []
   },
-  "include": ["packages/shared/src/**/*.ts", "apps/mobile/src/domain/**/*.ts"],
+  "include": [
+    "packages/shared/src/**/*.ts",
+    "apps/mobile/src/domain/**/*.ts",
+    "apps/mobile/src/db/**/*.ts"
+  ],
   "exclude": ["**/*.test.ts", "node_modules"]
 }

@@ -59,6 +59,7 @@ who did it, the gate result, and the commit.
 - **Commit:** `feat(domain): add solo stats (S2)` (PR #1).
 
 ## Iteration 3 — S3 head-to-head domain
+
 - **Slice:** S3 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
 - **Scope:** `domain/headtohead.ts` — `headToHead` (pair-by-order, drop trailing
   remainder, W-L-T, avgMargin = self−opp, selfAvg/opponentAvg over paired
@@ -76,5 +77,20 @@ who did it, the gate result, and the commit.
 - **Commit:** `feat(domain): add head-to-head relational stats (S3)` (PR #1).
 - **Milestone:** the entire pure-domain core (scoring, validation, splits,
   stats, head-to-head) is complete and proven — zero infra required.
+
+## Iteration 4 — S4 UUIDv7 id utility
+- **Slice:** S4 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
+- **Scope:** `apps/mobile/src/db/id.ts` — zero-dep inline UUIDv7 (`uuidv7`,
+  `uuidv7At(ms)` for deterministic tests, `isUuidV7`). 48-bit big-endian ms
+  timestamp (split hi/lo to avoid 32-bit overflow) ⇒ lexical order = chrono
+  order. Test-first (14 cases incl. 10k-uniqueness + monotonicity).
+- **Review:** PASS first pass. Bit math hand-verified
+  (`uuidv7At(0x017F22E279B0)` → `017f22e279b0…`), version/variant nibbles,
+  time-ordering, RN-portable RNG (`globalThis.crypto.getRandomValues`, throws
+  if absent; documents the `react-native-get-random-values` polyfill), no `any`.
+- **Notes:** lives in `db/` not `domain/` (impure — clock + RNG). Root
+  `tsconfig.json` include extended to `apps/mobile/src/db/**`.
+- **Gate:** 111 tests passing; typecheck, lint, format all green.
+- **Commit:** `feat(db): add UUIDv7 id generator (S4)` (PR #1).
 
 <!-- New iterations are appended below this line by the Tech Lead. -->

@@ -10,7 +10,7 @@ each iteration. Designs/notes for in-flight slices live in `docs/slices/<id>.md`
 | S1  | recognized-split lookup               | BE domain      | —          | CI-pure        | DONE   |
 | S2  | solo stats domain                     | BE domain      | S1         | CI-pure        | DONE   |
 | S3  | head-to-head domain                   | BE domain      | S2         | CI-pure        | DONE   |
-| S4  | UUIDv7 id utility                     | BE persistence | —          | CI-node-sqlite | TODO   |
+| S4  | UUIDv7 id utility                     | BE persistence | —          | CI-node-sqlite | DONE   |
 | S5  | Drizzle SQLite schema                 | BE persistence | S4         | CI-node-sqlite | TODO   |
 | S6  | forward-only migrations + db client   | BE persistence | S5         | CI-node-sqlite | TODO   |
 | S7  | repository modules                    | BE persistence | S4,S5      | CI-node-sqlite | TODO   |
