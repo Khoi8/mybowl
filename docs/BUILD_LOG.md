@@ -120,6 +120,7 @@ who did it, the gate result, and the commit.
 - **Commit:** `feat(db): add Drizzle SQLite schema with identity model + sync columns (S5)` (PR #1).
 
 ## Iteration 6 — S6 forward-only migrations + db client
+
 - **Slice:** S6 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
 - **Scope:** Generated the first forward-only migration
   `apps/mobile/drizzle/0000_sleepy_misty_knight.sql` (+ `meta/` journal) from the
@@ -139,10 +140,34 @@ who did it, the gate result, and the commit.
 - **Follow-ups (non-blocking, recorded):**
   1. Add a dedicated `tsconfig.node.json` (lib + @types/node) for tooling/test
      files instead of growing the root `exclude` list as node-side utilities
-     accumulate (S7+). 
+     accumulate (S7+).
   2. Wrap each migration file's statements in a transaction so a partial failure
      is atomic — matters when real device migrations chain.
 - **Gate:** 122 tests passing; typecheck, lint, format all green.
 - **Commit:** `feat(db): generate forward-only migration + Expo client boundary (S6)` (PR #1).
+
+## Iteration 7 — S7 repository modules
+- **Slice:** S7 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
+- **Scope:** `db/repositories/{players,sessions,games,frames,index}.ts` — offline-
+  first CRUD taking an injected `Db` handle (no global singleton). Every
+  mutation re-stamps sync metadata: create ⇒ `pending`+UUIDv7+updatedAt;
+  update ⇒ bumps updatedAt + resets `pending`; softDelete ⇒ tombstone
+  (`deletedAt`) + `pending`, never a physical DELETE. `list*`/`get*ById` exclude
+  tombstones. `createGameWithFrames` is transactional. `db/testing/memoryDb.ts`
+  builds a better-sqlite3 `:memory:` Drizzle instance via S6's `applyMigrations`.
+  `db/types.ts` defines `Db = BaseSQLiteDatabase<'sync', unknown, typeof schema>`.
+  Test-first (20 new cases, 142 total).
+- **Review:** PASS first pass. Verified: (1) transactional rollback genuinely
+  proves atomicity (dup-id PK violation mid-tx ⇒ game+frames count 0);
+  (2) `Db` 'sync' type accepts BOTH better-sqlite3 and the future expo-sqlite
+  driver (both extend `BaseSQLiteDatabase<'sync',…>`), `unknown` not `any`;
+  (3) update/softDelete always re-stamp `syncStatus='pending'` (regression
+  tested per entity). Identity model, tombstone-not-delete, frame ordering,
+  one-self backstop, no-any/noUncheckedIndexedAccess all confirmed.
+- **Notes:** memoryDb excluded from root tsc (imports better-sqlite3/node:*) but
+  still linted; get-by-id treats tombstoned rows as gone (returns undefined),
+  documented per repo.
+- **Gate:** 142 tests passing; typecheck, lint, format all green.
+- **Commit:** `feat(db): add offline-first repositories with tombstones (S7)` (PR #1).
 
 <!-- New iterations are appended below this line by the Tech Lead. -->
