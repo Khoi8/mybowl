@@ -12,7 +12,8 @@
 import { listGamesByPlayer, listGamesBySession } from '../repositories';
 import type { Game } from '../schema';
 import type { Db } from '../types';
-import { loadGameFrames } from './gameFrames';
+import type { PinMask } from '../../domain/splits';
+import { loadGameFrames, loadLeaveMasks } from './gameFrames';
 
 /** Stable chronological game order: UUIDv7 ids sort lexically by time. */
 function byId(a: Game, b: Game): number {
@@ -46,4 +47,18 @@ export function loadAllGamesForPlayer(db: Db, playerId: string): number[][][] {
   return listGamesByPlayer(db, playerId)
     .sort(byId)
     .map((game) => loadGameFrames(db, game.id));
+}
+
+/**
+ * ALL of a player's live games' per-frame leave masks, in the SAME chronological
+ * (UUIDv7) order as {@link loadAllGamesForPlayer}, so `leaves[i]` lines up with
+ * that function's game `i`. Each inner `PinMask[]` is one mask per frame (the
+ * rack facing the second throw), as produced by `loadLeaveMasks`. Used by the
+ * solo-stats feature to drive split / single-pin ratios and the pin-leave
+ * heatmap, which the domain only computes when leaves are present.
+ */
+export function loadAllLeavesForPlayer(db: Db, playerId: string): PinMask[][] {
+  return listGamesByPlayer(db, playerId)
+    .sort(byId)
+    .map((game) => loadLeaveMasks(db, game.id));
 }

@@ -1,25 +1,25 @@
 /**
- * Navigation skeleton: a native-stack with placeholder screens for the three
- * top-level areas the MVP feature slices will fill in (Sessions, Stats,
- * Arsenal). Intentionally thin — NO business logic here. Real screens land in
- * their feature slices (`features/sessions`, `features/stats`,
- * `features/arsenal`) in later slices and replace these placeholders.
+ * Navigation skeleton: a native-stack wiring the MVP feature-slice screens
+ * (Sessions, Stats, Arsenal, Players, Score). Intentionally thin — NO business
+ * logic here. Each screen lives in its feature slice (`features/sessions`,
+ * `features/stats`, `features/arsenal`, …).
  */
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Text, View } from 'react-native';
 
 import { ScoreEntryScreen } from '../features/scoring/ScoreEntryScreen';
 import { PlayersScreen } from '../features/players/PlayersScreen';
 import { SessionScreen } from '../features/sessions/SessionScreen';
 import { NewSessionScreen } from '../features/sessions/NewSessionScreen';
 import { ArsenalScreen } from '../features/arsenal/ArsenalScreen';
+import { SoloStatsScreen } from '../features/stats/SoloStatsScreen';
 
 /** Route name → params map. Widened per-slice as features land. */
 export type RootStackParamList = {
   Sessions: undefined;
-  Stats: undefined;
+  /** Solo stats for one bowler — `playerId` is whose stats to recompute. */
+  Stats: { playerId: string };
   Arsenal: undefined;
   /** Persistent contacts you bowl with (self + guests + linked accounts). */
   Players: undefined;
@@ -47,19 +47,6 @@ export type RootStackParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-/** Generic placeholder screen body until feature slices supply real screens. */
-function Placeholder({ title }: { readonly title: string }): React.JSX.Element {
-  return (
-    <View className="flex-1 items-center justify-center">
-      <Text className="text-lg font-semibold">{title}</Text>
-    </View>
-  );
-}
-
-function StatsScreen(): React.JSX.Element {
-  return <Placeholder title="Stats" />;
-}
-
 /** Root navigator mounted under the provider tree. */
 export function RootNavigation(): React.JSX.Element {
   return (
@@ -73,7 +60,11 @@ export function RootNavigation(): React.JSX.Element {
           />
           <Stack.Screen name="NewSession" component={NewSessionScreen} />
           <Stack.Screen name="Session" component={SessionScreen} />
-          <Stack.Screen name="Stats" component={StatsScreen} />
+          <Stack.Screen
+            name="Stats"
+            component={SoloStatsScreen}
+            options={{ title: 'Stats' }}
+          />
           <Stack.Screen name="Arsenal" component={ArsenalScreen} />
           <Stack.Screen name="Players" component={PlayersScreen} />
           <Stack.Screen name="Score" component={ScoreEntryScreen} />

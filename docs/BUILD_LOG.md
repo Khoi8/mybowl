@@ -457,4 +457,23 @@ pnpm typecheck` exit 0. Boot manual.
 pnpm typecheck` exit 0. Boot manual.
 - **Commit:** `feat(mobile): add arsenal + per-throw ball tagging (S13)` (PR #1).
 
+## Iteration 19 — S14 solo stats feature
+
+- **Slice:** S14 · **Dev:** FE Dev · **Reviewer:** Code Reviewer · **Lane:** heavy-expo
+- **Scope:** `features/stats/` — pure `loadSoloStats(db, playerId)` (rows →
+  read-models → `computeSeriesStats`+`aggregatePinLeaves`, RN-free, root-tested)
+  behind a thin `useSoloStats` TanStack Query hook; `SoloStatsScreen` (avg, high
+  game/series, strike/spare/split/single-pin %, clean games; "—" for nulls;
+  strike% fresh-rack note per S2) + `PinLeaveHeatmap`. Added
+  `loadAllLeavesForPlayer` read-model (same UUIDv7 sort as `loadAllGamesForPlayer`
+  → leaves[i] aligns with game i). Test-first (+3; 243 total).
+- **Review:** PASS first pass. Verified no stats table/column (grep + test
+  asserts no `*stat*` table + deterministic repeat read); games/leaves index
+  alignment correct (identical query+sort — the high-risk spot); end-to-end
+  values (300+70 ⇒ avg 185, highGame 300, highSeries 370, heatmap[10]=11);
+  empty history null/0 no NaN; gate isolation; no `any`.
+- **Gate:** root vitest 243, typecheck/lint/format clean (domain coverage still
+  100%); `cd apps/mobile && pnpm typecheck` exit 0. Boot manual.
+- **Commit:** `feat(mobile): add solo stats feature (S14)` (PR #1).
+
 <!-- New iterations are appended below this line by the Tech Lead. -->
