@@ -95,6 +95,7 @@ who did it, the gate result, and the commit.
 - **Commit:** `feat(db): add UUIDv7 id generator (S4)` (PR #1).
 
 ## Iteration 5 — S5 Drizzle SQLite schema
+
 - **Slice:** S5 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
 - **Scope:** `apps/mobile/src/db/schema.ts` — all 11 tables, driver-agnostic
   (no expo-sqlite import). Identity model encoded: `games.playerId`→players
@@ -117,5 +118,31 @@ who did it, the gate result, and the commit.
   already typechecks `db/**`); root include for `sync/**` deferred to S17.
 - **Gate:** 118 tests passing; typecheck, lint, format all green.
 - **Commit:** `feat(db): add Drizzle SQLite schema with identity model + sync columns (S5)` (PR #1).
+
+## Iteration 6 — S6 forward-only migrations + db client
+- **Slice:** S6 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
+- **Scope:** Generated the first forward-only migration
+  `apps/mobile/drizzle/0000_sleepy_misty_knight.sql` (+ `meta/` journal) from the
+  S5 schema — all 11 tables + the partial unique index, committed as
+  never-hand-edited artifacts (`.prettierignore` covers `drizzle/`).
+  `db/client.ts` = sole expo-sqlite importer (`getDb()` lazy singleton),
+  excluded from root typecheck + lint until S9 installs Expo. `db/migrate.ts`
+  `applyMigrations(sqlite)` reads `drizzle/*.sql` in lexical order, splits on the
+  statement-breakpoint marker, execs each — uses a local `SqliteExecutor`
+  interface (no hard better-sqlite3/Expo dependency). `migrate.test.ts` (4 cases)
+  proves 11-table parity + partial-index + round-trip against a migrated
+  `:memory:` DB, plus an append-only journal guard. `db:generate` script added.
+- **Review:** PASS first pass. Migration contents, forward-only discipline,
+  client.ts isolation, and the excludes all verified. The judgment call
+  (migrate.ts excluded from root tsc because the lean root config has no node
+  types) confirmed necessary and covered by Vitest+ESLint.
+- **Follow-ups (non-blocking, recorded):**
+  1. Add a dedicated `tsconfig.node.json` (lib + @types/node) for tooling/test
+     files instead of growing the root `exclude` list as node-side utilities
+     accumulate (S7+). 
+  2. Wrap each migration file's statements in a transaction so a partial failure
+     is atomic — matters when real device migrations chain.
+- **Gate:** 122 tests passing; typecheck, lint, format all green.
+- **Commit:** `feat(db): generate forward-only migration + Expo client boundary (S6)` (PR #1).
 
 <!-- New iterations are appended below this line by the Tech Lead. -->

@@ -1,0 +1,4 @@
+# Generated migration artifacts (drizzle-kit). Never hand-edit or reformat —
+# they must stay byte-identical to drizzle-kit's output so the journal/meta
+# checksums stay consistent and migrations remain forward-only.
+apps/mobile/drizzle/

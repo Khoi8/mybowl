@@ -12,7 +12,7 @@ each iteration. Designs/notes for in-flight slices live in `docs/slices/<id>.md`
 | S3  | head-to-head domain                   | BE domain      | S2         | CI-pure        | DONE   |
 | S4  | UUIDv7 id utility                     | BE persistence | —          | CI-node-sqlite | DONE   |
 | S5  | Drizzle SQLite schema                 | BE persistence | S4         | CI-node-sqlite | DONE   |
-| S6  | forward-only migrations + db client   | BE persistence | S5         | CI-node-sqlite | TODO   |
+| S6  | forward-only migrations + db client   | BE persistence | S5         | CI-node-sqlite | DONE   |
 | S7  | repository modules                    | BE persistence | S4,S5      | CI-node-sqlite | TODO   |
 | S8  | read-model adapters (rows→domain)     | BE persistence | S2,S3,S7   | CI-node-sqlite | TODO   |
 | S9  | Expo app scaffold + providers         | FE             | S6         | heavy-expo     | TODO   |
