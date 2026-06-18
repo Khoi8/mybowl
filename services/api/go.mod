@@ -2,7 +2,10 @@ module github.com/khoi8/mybowl/services/api
 
 go 1.25.7
 
-require github.com/go-chi/chi/v5 v5.3.0
+require (
+	github.com/go-chi/chi/v5 v5.3.0
+	github.com/golang-jwt/jwt/v5 v5.2.1
+)
 
 require (
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.68.0 // indirect

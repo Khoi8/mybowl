@@ -289,6 +289,7 @@ who did it, the gate result, and the commit.
 - **Commit:** `feat(api): add Go sync service + Postgres migrations (S19, S20)` (PR #1).
 
 ## Iteration 12 — S21 generated wire types (Go→TS)
+
 - **Slice:** S21 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
 - **Scope:** Inverted the type direction — Go is now the source of truth for the
   sync WIRE types. `packages/shared/generated/wire.ts` is generated from the Go
@@ -308,5 +309,37 @@ who did it, the gate result, and the commit.
 - **Gate:** JS — vitest 195 pass, typecheck/lint/format clean. Go — gofmt/vet
   clean, domain tests pass. Generated file prettier-ignored.
 - **Commit:** `feat(shared): generate TS wire types from Go + domain↔wire mapping (S21)` (PR #1).
+
+## Iteration 13 — S22 Cognito + CDK infra
+
+- **Slice:** S22 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
+- **Scope:** **Part A (infra):** `infra/` CDK app — auth-stack (Cognito user pool
+  email sign-in + app client, Apple/Google IdP seam documented/parked),
+  db-stack (Aurora Serverless v2 Postgres 16, 0.5–4 ACU), api-stack (API Gateway
+  REST → Lambda provided.al2023/arm64 with a COGNITO_USER_POOLS authorizer on
+  `/sync/*`, `/health` public). `cdk synth` verified creds-free; 7
+  `Template.fromStack` assertion tests. Infra is isolated (own tsconfig+vitest;
+  excluded from root tsc/eslint/vitest) so it can't destabilize the 195-test
+  root run. Lambda points at a placeholder asset (real Go bundling = deploy-time,
+  documented). **Part B (Go auth):** `internal/auth/cognito.go` — RS256 Cognito
+  JWT verifier (JWKS by kid; enforces RS256-only, exp-required, exact issuer,
+  token_use→client_id/aud, sub extraction), wired behind the middleware seam:
+  verifier when `COGNITO_ISSUER`/`COGNITO_CLIENT_ID` set, else the S19 stub.
+  Dep +golang-jwt/jwt/v5. AWS-free unit tests (httptest JWKS, locally-signed).
+- **Review:** CHANGES-REQUESTED → fixed. Reviewer probed the auth boundary
+  directly (alg=none, HS256 alg-confusion, missing-exp, unknown-kid → all
+  rejected; configured mode can't be downgraded to the stub). One blocking
+  catch: `infra/cdk.out/` wasn't gitignored (generated CFN would be staged).
+  **Fix:** added `infra/.gitignore` (`cdk.out/`, `node_modules/`); confirmed via
+  `git check-ignore` (0 generated paths staged). Re-verified clean.
+- **Gate:** infra — `cdk synth` clean + 7 tests. Go — gofmt/vet clean,
+  `go test ./...` all packages ok (auth + Postgres store), `go mod tidy` no diff.
+  Root — vitest 195, typecheck/lint/format clean (infra separate). Also fixed a
+  stale unformatted BUILD_LOG entry from the S21 commit.
+- **Commit:** `feat(infra): add Cognito+CDK stacks and Go JWT verifier (S22)` (PR #1).
+- **MILESTONE — backend + infra lane complete (14/22).** Go sync API + Postgres
+  - wire-type generation + Cognito/CDK all done and verified (synth/`go test`).
+    Remaining: the Expo UI lane S9–S16 (heavy-expo; logic unit-tested, components
+  - boot verified manually).
 
 <!-- New iterations are appended below this line by the Tech Lead. -->

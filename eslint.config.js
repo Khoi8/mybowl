@@ -12,6 +12,10 @@ export default tseslint.config(
       '**/dist/**',
       'apps/mobile/src/db/client.ts',
       'apps/mobile/src/sync/connectivity.ts',
+      // infra/ is its own package (CDK + Node types) with its own tsconfig; it
+      // is not part of the lean root TS project, so the root lint skips it.
+      'infra/**',
+      '**/cdk.out/**',
     ],
   },
   {

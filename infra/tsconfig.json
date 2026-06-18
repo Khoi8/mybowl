@@ -1,0 +1,24 @@
+{
+  // Infra is its own package: unlike the lean root (which forbids DOM/Node types
+  // to keep the domain pure), CDK code legitimately needs Node types. So this
+  // tsconfig does NOT extend the root base — it stands alone with node libs.
+  // The root tsconfig deliberately does not include infra/**.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "strict": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "declaration": false,
+    "noEmit": true
+  },
+  "include": ["bin/**/*.ts", "lib/**/*.ts", "test/**/*.ts"]
+}

@@ -28,7 +28,7 @@ each iteration. Designs/notes for in-flight slices live in `docs/slices/<id>.md`
 | S19 | Go chi service + /sync endpoints      | BE Go          | S18        | heavy-go-aws   | DONE   |
 | S20 | Postgres goose migrations             | BE Go          | S19        | heavy-go-aws   | DONE   |
 | S21 | generated wire types (Go→TS)          | BE Go          | S19        | heavy-go-aws   | DONE   |
-| S22 | Cognito + CDK infra                   | BE Go          | S19,S20    | heavy-go-aws   | TODO   |
+| S22 | Cognito + CDK infra                   | BE Go          | S19,S20    | heavy-go-aws   | DONE   |
 
 **Lanes:** `CI-pure` = pure TS + Vitest, headless. `CI-node-sqlite` = + `better-sqlite3`
 in Node, headless. `heavy-expo` = needs Expo/RN (logic lands in unit-testable

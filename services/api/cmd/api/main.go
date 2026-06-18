@@ -50,7 +50,24 @@ func run() error {
 	}
 	defer st.Close()
 
-	r := NewRouter(st)
+	// Cognito wiring: when COGNITO_ISSUER + COGNITO_CLIENT_ID are set the /sync
+	// routes require a valid Cognito JWT; otherwise the dev/test stub applies.
+	verifier, err := handlers.NewCognitoVerifierFromEnv(
+		os.Getenv("COGNITO_ISSUER"),
+		os.Getenv("COGNITO_CLIENT_ID"),
+	)
+	if err != nil {
+		return err
+	}
+	var authOpts []handlers.AuthOption
+	if verifier != nil {
+		log.Print("auth: Cognito JWT verification enabled")
+		authOpts = append(authOpts, handlers.WithVerifier(verifier))
+	} else {
+		log.Print("auth: Cognito not configured; using header/bearer stub")
+	}
+
+	r := NewRouter(st, authOpts...)
 
 	srv := &http.Server{
 		Addr:              ":" + port,
@@ -67,7 +84,9 @@ func run() error {
 // NewRouter builds the chi router: middleware stack, health check, and the
 // authenticated /sync routes. Exported so integration tests mount the real
 // handlers against a test store.
-func NewRouter(st handlers.Syncer) http.Handler {
+// authOpts are forwarded to handlers.NewAuthMiddleware; with none, the /sync
+// routes use the dev/test stub (so existing integration tests pass unchanged).
+func NewRouter(st handlers.Syncer, authOpts ...handlers.AuthOption) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -78,9 +97,10 @@ func NewRouter(st handlers.Syncer) http.Handler {
 		_, _ = w.Write([]byte("ok"))
 	})
 
+	authMiddleware := handlers.NewAuthMiddleware(authOpts...)
 	sync := handlers.NewSyncHandler(st)
 	r.Group(func(r chi.Router) {
-		r.Use(handlers.AuthMiddleware)
+		r.Use(authMiddleware)
 		r.Post("/sync/push", sync.Push)
 		r.Get("/sync/pull", sync.Pull)
 	})

@@ -1,0 +1,10 @@
+#!/bin/sh
+# PLACEHOLDER ONLY — replaced at deploy time by the compiled Go binary.
+#
+# The real Go Lambda is built for the `provided.al2023` custom runtime: compile
+# `services/api/cmd/api` (adapted to lambda via aws-lambda-go or an API-Gateway
+# proxy shim) to a static linux/arm64 binary named `bootstrap`, and point the
+# CDK asset at that build output (e.g. via `lambda.Code.fromCustomCommand` or a
+# bundled asset). This file exists so `cdk synth` can package a valid asset
+# without AWS credentials or a Go cross-compile in CI.
+echo '{"statusCode":501,"body":"bowli api placeholder - deploy the real Go binary"}'

@@ -7,3 +7,6 @@ apps/mobile/drizzle/
 # hand-edit or reformat — regenerate from Go. Keeping prettier off it avoids a
 # spurious format diff against tygo's output.
 packages/shared/generated/
+
+# Generated CDK synth output (CloudFormation templates, asset manifests, tree).
+infra/cdk.out/
