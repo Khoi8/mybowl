@@ -226,6 +226,7 @@ who did it, the gate result, and the commit.
 - **Commit:** `feat(sync): add transactional outbox wiring repo writes to sync ops (S17)` (PR #1).
 
 ## Iteration 10 — S18 LWW reconciliation + drain
+
 - **Slice:** S18 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
 - **Scope:** `sync/reconcile.ts` (`reconcile` LWW decision + `applyRemoteRows`),
   `sync/drain.ts` (push pending ops via injected transport + `drainPull` helper),
@@ -252,5 +253,38 @@ who did it, the gate result, and the commit.
   heavy-expo) and S19–S22 (Go/Postgres/Cognito/CDK, heavy-go-aws) — need
   toolchains beyond the headless container; logic in those lands in
   unit-testable hooks/stores with thin components/handlers verified manually.
+
+## Iteration 11 — S19 + S20 Go sync API + Postgres migrations
+- **Slices:** S19 + S20 (delivered together — the API can't be tested without
+  its schema) · **Dev:** BE Dev (Go) · **Reviewer:** Code Reviewer
+- **Scope:** `services/api` — chi service with `POST /sync/push` (batched ops,
+  one transaction) and `GET /sync/pull?since=` (changed rows incl. tombstones,
+  cursor). `internal/domain` holds wire types + the pure `IncomingWins` LWW
+  decision; `internal/store` is a pgx store applying LWW via guarded
+  `ON CONFLICT DO UPDATE` (upsert) and guarded UPDATE (tombstone delete);
+  generic upsert keyed on an entityTable→columns registry with a strict
+  allowlist. `migrations/0001_init.sql` (goose, forward-only) mirrors all 11
+  entity tables + identity FKs + the one-self partial index; frame arrays JSONB;
+  sync_ops NOT mirrored (local-only). Auth is a documented `X-User-Id`/Bearer
+  stub (real Cognito → S22). Real integration tests via testcontainers Postgres.
+- **Review:** PASS. LWW SQL guard verified byte-for-byte equal to the device
+  `reconcile` rule (newer wins; tie⇒tombstone; tie⇒higher id; equal id+ts⇒lose);
+  SQL-injection safety confirmed (table+column names only from a validated
+  allowlist/registry, all values bound as params); identity model, batch
+  atomicity, tombstone-not-delete, %w wrapping, thin handlers all verified.
+- **Tech Lead hardening:** made `go test ./...` reproducible with no out-of-band
+  env — `testsupport.StartPostgres` now honors `TEST_DATABASE_URL` and defaults
+  `TESTCONTAINERS_RYUK_DISABLED=true` (ryuk image unpullable here; containers
+  still cleaned up). Added `services/api/README.md` (documents Go ≥ 1.25 +
+  Docker requirement).
+- **Decisions:** toolchain bumped to Go 1.25.x (dependency-forced by
+  goose/pgx/testcontainers; not gratuitous). Generic table-driven upsert.
+- **Follow-ups (non-blocking):** `pull` has no LIMIT/pagination yet (fine for
+  MVP); server stores device `sync_status` verbatim (cosmetic).
+- **Gate:** Go — `gofmt -l` clean, `go vet` clean, `go build` clean,
+  `go test ./...` green incl. full Postgres integration (Tech-Lead-verified,
+  12.4s fresh). JS — `pnpm exec vitest run` 188 passed, lint/format clean
+  (workspace untouched).
+- **Commit:** `feat(api): add Go sync service + Postgres migrations (S19, S20)` (PR #1).
 
 <!-- New iterations are appended below this line by the Tech Lead. -->
