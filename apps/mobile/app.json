@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "bowli",
+    "slug": "bowli",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "scheme": "bowli",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bowli.app"
+    },
+    "android": {
+      "package": "com.bowli.app"
+    },
+    "plugins": ["expo-sqlite"],
+    "experiments": {
+      "tsconfigPaths": true
+    }
+  }
+}

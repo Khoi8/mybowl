@@ -6,13 +6,12 @@
  * runs under plain Node with `better-sqlite3`. Concentrating the Expo coupling
  * here keeps the rest of `db/**` portable and headlessly testable.
  *
- * EXCLUDED FROM NODE TYPECHECK + LINT until S9: `expo-sqlite` is not installed
- * yet (the Expo scaffold lands in S9), so resolving its types/module would fail
- * the root `tsc` and ESLint import resolution. This file is therefore listed in
- * the root `tsconfig.json` `exclude` array and in `eslint.config.js` `ignores`.
- * It is never imported by Vitest (nothing references it yet), so the test suite
- * stays green. S9 installs Expo, removes those excludes, and wires `getDb()`
- * into the app providers.
+ * EXCLUDED FROM THE LEAN ROOT NODE TYPECHECK + LINT: resolving `expo-sqlite`
+ * under the RN-free root `tsc`/ESLint would fail, so this file is listed in the
+ * root `tsconfig.json` `exclude` array and in `eslint.config.js` `ignores`. It
+ * is instead typechecked by the Expo project (`apps/mobile/tsconfig.json`, which
+ * has the RN/Expo types). It is never imported by Vitest, so the Node test suite
+ * stays green. `getDb()` is wired into the app providers (S9).
  *
  * App-launch migrations: at runtime the app applies the GENERATED `drizzle`
  * folder via `drizzle-orm/expo-sqlite/migrator` (`useMigrations` /

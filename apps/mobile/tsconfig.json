@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "moduleResolution": "Bundler",
+    "module": "ESNext",
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noEmit": true
+  },
+  "include": [
+    "App.tsx",
+    "index.ts",
+    "nativewind-env.d.ts",
+    "types.d.ts",
+    "src/app/**/*.ts",
+    "src/app/**/*.tsx",
+    "src/features/**/*.ts",
+    "src/features/**/*.tsx",
+    "src/ui/**/*.ts",
+    "src/ui/**/*.tsx",
+    "src/db/**/*.ts",
+    "src/sync/**/*.ts",
+    "src/domain/**/*.ts",
+    "packages/shared/src/**/*.ts"
+  ],
+  "exclude": ["node_modules", "**/*.test.ts", "babel.config.js", "metro.config.js"]
+}

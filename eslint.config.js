@@ -12,6 +12,11 @@ export default tseslint.config(
       '**/dist/**',
       'apps/mobile/src/db/client.ts',
       'apps/mobile/src/sync/connectivity.ts',
+      // Ambient asset/module declarations (`*.sql`, the drizzle migrations
+      // bundle, NativeWind types). These use TS `declare module` glob syntax
+      // the lean non-type-aware root parser can't handle; they belong to the
+      // Expo app's own TS project (apps/mobile/tsconfig.json), not the root.
+      'apps/mobile/**/*.d.ts',
       // infra/ is its own package (CDK + Node types) with its own tsconfig; it
       // is not part of the lean root TS project, so the root lint skips it.
       'infra/**',
