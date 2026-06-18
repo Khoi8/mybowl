@@ -265,3 +265,5 @@ export type Frame = typeof frames.$inferSelect;
 export type NewFrame = typeof frames.$inferInsert;
 export type Ball = typeof balls.$inferSelect;
 export type NewBall = typeof balls.$inferInsert;
+export type LaneConditionLog = typeof laneConditionLogs.$inferSelect;
+export type NewLaneConditionLog = typeof laneConditionLogs.$inferInsert;

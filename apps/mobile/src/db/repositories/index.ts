@@ -11,3 +11,4 @@ export * from './sessions';
 export * from './games';
 export * from './frames';
 export * from './balls';
+export * from './laneConditions';

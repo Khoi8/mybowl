@@ -22,7 +22,7 @@ each iteration. Designs/notes for in-flight slices live in `docs/slices/<id>.md`
 | S13 | arsenal (balls) feature               | FE             | S9,S7,S10  | heavy-expo     | DONE   |
 | S14 | solo stats feature                    | FE             | S2,S8,S12  | heavy-expo     | DONE   |
 | S15 | relational stats feature              | FE             | S3,S8,S12  | heavy-expo     | DONE   |
-| S16 | lane conditions feature               | FE+persistence | S5,S7,S12  | heavy-expo     | TODO   |
+| S16 | lane conditions feature               | FE+persistence | S5,S7,S12  | heavy-expo     | DONE   |
 | S17 | sync outbox: ops table + enqueue      | BE sync        | S5,S7      | CI-node-sqlite | DONE   |
 | S18 | LWW reconciliation + drain            | BE sync        | S17        | CI-node-sqlite | DONE   |
 | S19 | Go chi service + /sync endpoints      | BE Go          | S18        | heavy-go-aws   | DONE   |

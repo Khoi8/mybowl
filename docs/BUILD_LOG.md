@@ -497,4 +497,51 @@ opp)` (read-models → `headToHead`/`withWithout`/`timesBowledWith`, RN-free,
 pnpm typecheck` exit 0. Boot manual.
 - **Commit:** `feat(mobile): add relational (head-to-head) stats feature (S15)` (PR #1).
 
+## Iteration 21 — S16 lane conditions feature (FINAL MVP slice)
+
+- **Slice:** S16 · **Dev:** FE Dev · **Reviewer:** Code Reviewer · **Lane:** heavy-expo
+- **Scope:** `db/repositories/laneConditions.ts` (mirrors the repo pattern;
+  per-visit log carrying ownerUserId+locationId+sessionId) + `LaneConditionLog`/
+  `NewLaneConditionLog` schema exports + `features/laneConditions/` store/hook/
+  `LaneConditionForm` (freshness/playStyle/carrydown/notes/rating). Reachable
+  from SessionScreen only when the session has a locationId. Test-first (+9; 256).
+- **Review:** PASS first pass. Per-visit invariant verified real (create always
+  INSERTs, no upsert/aggregate; test proves two same-location visits stay
+  distinct and the first log is untouched by the second); repo sync/tombstone
+  pattern faithful; identity (no orphan logs); gate isolation; no `any`.
+- **Follow-up (non-blocking):** list reads are unordered — add chronological
+  ordering when a history UI consumes them.
+- **Gate:** root vitest 256, typecheck/lint/format clean; `cd apps/mobile &&
+pnpm typecheck` exit 0. Boot manual.
+- **Commit:** `feat(mobile): add per-visit lane conditions feature (S16)` (PR #1).
+
+---
+
+## 🏁 MVP COMPLETE — all 22 slices shipped
+
+All backlog slices S1–S22 are DONE and on PR #1, each via dev → quality gate →
+Code Reviewer → commit:
+
+- **Pure domain (S1–S3):** splits, solo stats, head-to-head — 100% covered.
+- **Persistence (S4–S8):** UUIDv7, Drizzle schema + identity model, forward-only
+  migrations + Expo client, repositories, read-model adapters.
+- **Sync (S17–S18):** transactional outbox, LWW reconciliation + drain.
+- **Backend/infra (S19–S22):** Go chi `/sync` API + Postgres (real integration
+  tests), Go→TS wire-type generation, Cognito + CDK (synth-verified).
+- **Mobile UI (S9–S16):** Expo shell, scoring entry, players/contacts, sessions
+  (solo = one-participant), arsenal + ball tagging, solo stats, relational
+  stats, lane conditions.
+
+**Final gate:** 256 JS tests (domain core 100% covered) + Go suite incl. real
+Postgres integration + infra `cdk synth` & assertions; typecheck/lint/format
+green across the workspace; mobile Expo project typechecks. App boot is the only
+manual step (no simulator in CI).
+
+**Tracked follow-ups (for a future batch — have the Architect slice these):**
+per-pin leave picker (exact heatmap positions + split naming); `tsconfig.node.json`
+for node tooling/test files; transactional migration application; pull
+pagination; chronological ordering on lane-condition list reads; commitlint +
+husky (Phase-0 nicety). Parked features (live multi-device, guest→account
+linking, ranking/social) remain designed-around but unbuilt.
+
 <!-- New iterations are appended below this line by the Tech Lead. -->

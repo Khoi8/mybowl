@@ -11,12 +11,13 @@
  */
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { getDb } from '../../db/client';
 import type { RootStackParamList } from '../../app/navigation';
 import type { Session } from '../../db/schema';
 import { getSessionById } from '../../db/repositories/sessions';
+import { LaneConditionForm } from '../laneConditions/LaneConditionForm';
 import { usePlayers } from '../players/usePlayers';
 import { ParticipantList } from './ParticipantList';
 import type { ParticipantGames } from './store';
@@ -31,6 +32,7 @@ export function SessionScreen({ route, navigation }: Props): React.JSX.Element {
 
   const [session, setSession] = useState<Session | undefined>(undefined);
   const [groups, setGroups] = useState<readonly ParticipantGames[]>([]);
+  const [showLaneForm, setShowLaneForm] = useState(false);
 
   useEffect(() => {
     const db = getDb();
@@ -80,6 +82,30 @@ export function SessionScreen({ route, navigation }: Props): React.JSX.Element {
       </View>
 
       <ParticipantList groups={groups} nameFor={nameFor} onScore={onScore} />
+
+      {session.locationId !== null ? (
+        <View className="border-t border-gray-100 px-4 py-3">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ expanded: showLaneForm }}
+            onPress={() => setShowLaneForm((prev) => !prev)}
+            className="rounded-lg border border-gray-300 px-4 py-2"
+          >
+            <Text className="text-center font-semibold text-gray-700">
+              {showLaneForm ? 'Hide lane conditions' : 'Log lane conditions'}
+            </Text>
+          </Pressable>
+          {showLaneForm ? (
+            <LaneConditionForm
+              ownerUserId={session.ownerUserId}
+              locationId={session.locationId}
+              sessionId={session.id}
+              date={session.date}
+              onLogged={() => setShowLaneForm(false)}
+            />
+          ) : null}
+        </View>
+      ) : null}
     </ScrollView>
   );
 }
