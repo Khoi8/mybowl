@@ -40,13 +40,23 @@ export interface GameMeta {
 export interface ScoreEntryState {
   /** One entry per started frame; each is the list of throw pin-counts so far. */
   readonly frames: number[][];
+  /**
+   * Ball tagged per throw, indexed PARALLEL to `frames` (same shape): null where
+   * a throw was recorded without a selected ball. Scoring is ball-agnostic — the
+   * domain never sees this; it is carried only so `commit` can persist it into
+   * each frame's `ballIdPerThrow`.
+   */
+  readonly ballIdPerThrow: (string | null)[][];
   /** Zero-based index of the frame currently accepting throws (0..9). */
   readonly currentFrame: number;
   /** Reason the last `recordThrow` was rejected, else `null`. */
   readonly lastError: string | null;
 
-  /** Append a throw to the current frame iff `validateFrame` accepts it. */
-  recordThrow: (pins: number) => void;
+  /**
+   * Append a throw to the current frame iff `validateFrame` accepts it. The
+   * optional `ballId` tags which ball threw it (null/omitted = untagged).
+   */
+  recordThrow: (pins: number, ballId?: string | null) => void;
   /** Remove the most recent throw (and step back a frame if one empties). */
   undoLastThrow: () => void;
   /** Clear all entry back to a fresh game. */
@@ -99,11 +109,12 @@ export function legalNextPins(state: {
 export function createScoreEntryStore(): StoreApi<ScoreEntryState> {
   return createStore<ScoreEntryState>((set, get) => ({
     frames: [],
+    ballIdPerThrow: [],
     currentFrame: 0,
     lastError: null,
 
-    recordThrow: (pins: number): void => {
-      const { frames, currentFrame } = get();
+    recordThrow: (pins: number, ballId: string | null = null): void => {
+      const { frames, ballIdPerThrow, currentFrame } = get();
       if (currentFrame >= LAST_FRAME) {
         set({ lastError: 'game is already complete' });
         return;
@@ -122,17 +133,21 @@ export function createScoreEntryStore(): StoreApi<ScoreEntryState> {
 
       const nextFrames = frames.slice();
       nextFrames[currentFrame] = candidate;
+      // Mirror the throw into the parallel ball-tag structure.
+      const nextBalls = ballIdPerThrow.slice();
+      nextBalls[currentFrame] = [...(ballIdPerThrow[currentFrame] ?? []), ballId];
       const advance = isFrameComplete(frameNo, candidate);
 
       set({
         frames: nextFrames,
+        ballIdPerThrow: nextBalls,
         currentFrame: advance ? currentFrame + 1 : currentFrame,
         lastError: null,
       });
     },
 
     undoLastThrow: (): void => {
-      const { frames, currentFrame } = get();
+      const { frames, ballIdPerThrow, currentFrame } = get();
       // The frame the last throw landed in is the current one if it has throws,
       // otherwise the previous (completed) frame.
       const here = currentThrows(frames, currentFrame);
@@ -149,30 +164,42 @@ export function createScoreEntryStore(): StoreApi<ScoreEntryState> {
       }
 
       const nextFrames = frames.slice();
+      const nextBalls = ballIdPerThrow.slice();
       const trimmed = targetThrows.slice(0, -1);
+      const trimmedBalls = (ballIdPerThrow[targetIndex] ?? []).slice(0, -1);
       if (trimmed.length === 0) {
         nextFrames.splice(targetIndex, 1);
+        nextBalls.splice(targetIndex, 1);
       } else {
         nextFrames[targetIndex] = trimmed;
+        nextBalls[targetIndex] = trimmedBalls;
       }
-      set({ frames: nextFrames, currentFrame: targetIndex, lastError: null });
+      set({
+        frames: nextFrames,
+        ballIdPerThrow: nextBalls,
+        currentFrame: targetIndex,
+        lastError: null,
+      });
     },
 
     reset: (): void => {
-      set({ frames: [], currentFrame: 0, lastError: null });
+      set({ frames: [], ballIdPerThrow: [], currentFrame: 0, lastError: null });
     },
 
     scored: (): ScoredGame => scoreGame(get().frames),
 
     commit: (db: Db, meta: GameMeta): string => {
-      const { frames } = get();
+      const { frames, ballIdPerThrow } = get();
       const frameInputs: GameFrameInput[] = frames.map((throws, idx) => {
         const isTenth = idx + 1 === LAST_FRAME;
+        const tags = ballIdPerThrow[idx] ?? [];
         return {
           frameNo: idx + 1,
           throws,
-          // Ball tagging is a later slice; no ball recorded per throw yet.
-          ballIdPerThrow: throws.map(() => null),
+          // Per-throw ball tag, aligned to `throws`; null for any untagged throw
+          // (defensively padded so the arrays always line up). Scoring never
+          // touches this — it is pure equipment metadata.
+          ballIdPerThrow: throws.map((_, t) => tags[t] ?? null),
           pinState: buildPinState(throws, isTenth),
         };
       });

@@ -263,3 +263,5 @@ export type Game = typeof games.$inferSelect;
 export type NewGame = typeof games.$inferInsert;
 export type Frame = typeof frames.$inferSelect;
 export type NewFrame = typeof frames.$inferInsert;
+export type Ball = typeof balls.$inferSelect;
+export type NewBall = typeof balls.$inferInsert;

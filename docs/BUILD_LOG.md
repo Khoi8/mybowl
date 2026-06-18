@@ -439,4 +439,22 @@ pnpm typecheck` exit 0. Boot manual.
 pnpm typecheck` exit 0. Boot manual.
 - **Commit:** `feat(mobile): add sessions feature, solo as one-participant (S12)` (PR #1).
 
+## Iteration 18 — S13 arsenal (balls) feature
+
+- **Slice:** S13 · **Dev:** FE Dev · **Reviewer:** Code Reviewer · **Lane:** heavy-expo
+- **Scope:** New `db/repositories/balls.ts` (mirrors the repo pattern: injected
+  Db, outbox enqueue, tombstone; `listActiveBalls` excludes retired+tombstones)
+  - `Ball`/`NewBall` schema exports. `features/arsenal/` store/hook/screens
+    (CRUD + retire/unretire). Per-throw ball tagging threaded through the scoring
+    store: `recordThrow(pins, ballId?)` keeps `ballIdPerThrow` aligned with
+    `frames` across record/undo/reset; `commit` now persists real tags (was
+    all-null). Domain stays ball-agnostic. Test-first (+13; 240 total).
+- **Review:** PASS first pass. Verified ballIdPerThrow alignment across all three
+  mutators (no drift), domain never sees ballId (grep-confirmed), retired balls
+  hidden from BallPicker but kept live for history, repo pattern parity, gate
+  isolation, no `any`, S10 pinState/validation untouched.
+- **Gate:** root vitest 240, typecheck/lint/format clean; `cd apps/mobile &&
+pnpm typecheck` exit 0. Boot manual.
+- **Commit:** `feat(mobile): add arsenal + per-throw ball tagging (S13)` (PR #1).
+
 <!-- New iterations are appended below this line by the Tech Lead. -->

@@ -14,6 +14,7 @@ import { ScoreEntryScreen } from '../features/scoring/ScoreEntryScreen';
 import { PlayersScreen } from '../features/players/PlayersScreen';
 import { SessionScreen } from '../features/sessions/SessionScreen';
 import { NewSessionScreen } from '../features/sessions/NewSessionScreen';
+import { ArsenalScreen } from '../features/arsenal/ArsenalScreen';
 
 /** Route name → params map. Widened per-slice as features land. */
 export type RootStackParamList = {
@@ -57,10 +58,6 @@ function Placeholder({ title }: { readonly title: string }): React.JSX.Element {
 
 function StatsScreen(): React.JSX.Element {
   return <Placeholder title="Stats" />;
-}
-
-function ArsenalScreen(): React.JSX.Element {
-  return <Placeholder title="Arsenal" />;
 }
 
 /** Root navigator mounted under the provider tree. */

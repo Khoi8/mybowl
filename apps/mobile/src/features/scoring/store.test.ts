@@ -4,6 +4,7 @@ import { scoreGame } from '../../domain/scoring';
 import { users } from '../../db/schema';
 import { createMemoryDb } from '../../db/testing/memoryDb';
 import { createPlayer } from '../../db/repositories/players';
+import { createBall } from '../../db/repositories/balls';
 import { listFramesByGame } from '../../db/repositories/frames';
 import { getGameById } from '../../db/repositories/games';
 import { createScoreEntryStore, legalNextPins } from './store';
@@ -171,5 +172,67 @@ describe('scoring store', () => {
     expect(frames[1]?.pinState).toEqual([0b1111111111, 0b0000000001]);
     expect(frames[1]?.ballIdPerThrow).toEqual([null, null]);
     expect(frames.every((f) => f.syncStatus === 'pending')).toBe(true);
+  });
+
+  it('recordThrow(pins, ballId) tags the throw at the right per-throw index', () => {
+    const store = createScoreEntryStore();
+    store.getState().recordThrow(7, 'ball-a'); // frame 1, throw 1
+    store.getState().recordThrow(2, 'ball-b'); // frame 1, throw 2
+    store.getState().recordThrow(5); // frame 2, throw 1 (untagged)
+
+    const s = store.getState();
+    expect(s.frames).toEqual([[7, 2], [5]]);
+    expect(s.ballIdPerThrow).toEqual([['ball-a', 'ball-b'], [null]]);
+  });
+
+  it('undo trims the parallel ball-tag structure in lockstep with throws', () => {
+    const store = createScoreEntryStore();
+    store.getState().recordThrow(10, 'ball-a'); // frame 1 strike (advances)
+    store.getState().recordThrow(4, 'ball-b'); // frame 2, throw 1
+    expect(store.getState().ballIdPerThrow).toEqual([['ball-a'], ['ball-b']]);
+
+    store.getState().undoLastThrow(); // remove the 4 -> frame 2 empties
+    expect(store.getState().frames).toEqual([[10]]);
+    expect(store.getState().ballIdPerThrow).toEqual([['ball-a']]);
+
+    store.getState().undoLastThrow(); // remove the strike -> frame 1 gone
+    expect(store.getState().ballIdPerThrow).toEqual([]);
+  });
+
+  it('reset clears the ball-tag structure too', () => {
+    const store = createScoreEntryStore();
+    store.getState().recordThrow(9, 'ball-a');
+    store.getState().reset();
+    expect(store.getState().ballIdPerThrow).toEqual([]);
+  });
+
+  it('commit persists ballIdPerThrow matching the tagged balls (null when untagged)', () => {
+    const { db } = createMemoryDb();
+    const [user] = db.insert(users).values({}).returning().all();
+    if (user === undefined) throw new Error('unreachable');
+    const self = createPlayer(db, { name: 'Me', isSelf: true, userId: user.id });
+    const ballA = createBall(db, { ownerUserId: user.id, name: 'A' });
+    const ballB = createBall(db, { ownerUserId: user.id, name: 'B' });
+
+    const store = createScoreEntryStore();
+    // Frame 1: strike with ballA. Frame 2: 9 (ballB) then spare fill untagged.
+    store.getState().recordThrow(10, ballA.id);
+    store.getState().recordThrow(9, ballB.id);
+    store.getState().recordThrow(1); // untagged spare
+    store.getState().recordThrow(8, ballA.id); // frame 3 open
+    store.getState().recordThrow(0, ballA.id);
+
+    const gameId = store.getState().commit(db, {
+      ownerUserId: user.id,
+      playerId: self.id,
+      date: '2026-06-18',
+    });
+
+    const frames = listFramesByGame(db, gameId);
+    expect(frames[0]?.throws).toEqual([10]);
+    expect(frames[0]?.ballIdPerThrow).toEqual([ballA.id]);
+    expect(frames[1]?.throws).toEqual([9, 1]);
+    expect(frames[1]?.ballIdPerThrow).toEqual([ballB.id, null]);
+    expect(frames[2]?.ballIdPerThrow).toEqual([ballA.id, ballA.id]);
   });
 });
