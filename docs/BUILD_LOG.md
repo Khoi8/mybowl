@@ -399,4 +399,22 @@ who did it, the gate result, and the commit.
 pnpm typecheck` exit 0. Boot manual.
 - **Commit:** `feat(mobile): add scoring entry feature (S10)` (PR #1).
 
+## Iteration 16 — S11 players/contacts feature
+
+- **Slice:** S11 · **Dev:** FE Dev · **Reviewer:** Code Reviewer · **Lane:** heavy-expo
+- **Scope:** `features/players/` — RN-free vanilla-zustand store (`load`,
+  `search` reuse-first ranking exact→prefix→substring, `createGuest`,
+  `ensureSelf`, update/remove), `usePlayers` hook (module singleton — global
+  contacts), `PlayersScreen`/`AddPlayerSheet` (.tsx) with reuse-first UX
+  (existing matches prominent; "Create new guest" a gated, visually-secondary
+  fallback). Test-first (+10; 220 total).
+- **Review:** PASS first pass. Single-self invariant verified defense-in-depth
+  (`ensureSelf` idempotent via `getSelfPlayer`; DB partial unique index backstops
+  a raw second-self insert — both tested); reuse-first ranking genuine + stable;
+  guest = userId null/isSelf false; tombstone soft-delete; gate isolation + no
+  `any`; tests use the store factory + memoryDb (no singleton leakage).
+- **Gate:** root vitest 220, typecheck/lint/format clean; `cd apps/mobile &&
+pnpm typecheck` exit 0. Boot manual.
+- **Commit:** `feat(mobile): add players/contacts feature (S11)` (PR #1).
+
 <!-- New iterations are appended below this line by the Tech Lead. -->

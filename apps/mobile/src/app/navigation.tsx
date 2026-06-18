@@ -11,12 +11,15 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Text, View } from 'react-native';
 
 import { ScoreEntryScreen } from '../features/scoring/ScoreEntryScreen';
+import { PlayersScreen } from '../features/players/PlayersScreen';
 
 /** Route name → params map. Widened per-slice as features land. */
 export type RootStackParamList = {
   Sessions: undefined;
   Stats: undefined;
   Arsenal: undefined;
+  /** Persistent contacts you bowl with (self + guests + linked accounts). */
+  Players: undefined;
   /**
    * Manual scoring entry. The caller (a session/solo flow, S12) supplies whose
    * game this is — `ownerUserId` is the recording account, `playerId` is the
@@ -61,6 +64,7 @@ export function RootNavigation(): React.JSX.Element {
           <Stack.Screen name="Sessions" component={SessionsScreen} />
           <Stack.Screen name="Stats" component={StatsScreen} />
           <Stack.Screen name="Arsenal" component={ArsenalScreen} />
+          <Stack.Screen name="Players" component={PlayersScreen} />
           <Stack.Screen name="Score" component={ScoreEntryScreen} />
         </Stack.Navigator>
       </NavigationContainer>
