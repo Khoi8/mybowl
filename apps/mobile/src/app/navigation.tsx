@@ -10,11 +10,23 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Text, View } from 'react-native';
 
-/** Route name → params map. No params yet; widened per-slice later. */
+import { ScoreEntryScreen } from '../features/scoring/ScoreEntryScreen';
+
+/** Route name → params map. Widened per-slice as features land. */
 export type RootStackParamList = {
   Sessions: undefined;
   Stats: undefined;
   Arsenal: undefined;
+  /**
+   * Manual scoring entry. The caller (a session/solo flow, S12) supplies whose
+   * game this is — `ownerUserId` is the recording account, `playerId` is the
+   * bowler. `sessionId` is omitted/null for a solo game.
+   */
+  Score: {
+    ownerUserId: string;
+    playerId: string;
+    sessionId?: string | null;
+  };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -49,6 +61,7 @@ export function RootNavigation(): React.JSX.Element {
           <Stack.Screen name="Sessions" component={SessionsScreen} />
           <Stack.Screen name="Stats" component={StatsScreen} />
           <Stack.Screen name="Arsenal" component={ArsenalScreen} />
+          <Stack.Screen name="Score" component={ScoreEntryScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

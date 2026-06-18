@@ -375,4 +375,28 @@ who did it, the gate result, and the commit.
   SDK-52-compatible versions (no network for `expo install`).
 - **Commit:** `feat(mobile): scaffold Expo app shell + providers (S9)` (PR #1).
 
+## Iteration 15 — S10 scoring entry feature
+
+- **Slice:** S10 · **Dev:** FE Dev · **Reviewer:** Code Reviewer · **Lane:** heavy-expo
+- **Scope:** `features/scoring/` — RN-free vanilla-zustand `store.ts`
+  (`recordThrow`/`undoLastThrow`/`reset`/`scored()`/`commit()` + `legalNextPins`),
+  `pinState.ts`, react bridge `useScoreEntry.ts`, thin `FrameInput`/`Scorecard`/
+  `ScoreEntryScreen` (.tsx), wired into navigation as the `Score` route. Legality
+  via `validateFrame`, running score via `scoreGame` (no reimplementation; only
+  store-local rule is cursor-advance sequencing). `commit` persists via the
+  atomic `createGameWithFrames` (offline-first; outbox enqueues). Test-first
+  (+11; 210 total).
+- **Review:** PASS first pass. Reviewer mechanically verified the **pinState
+  placeholder** is safe: per-throw pin COUNT is exact (popcount==N), and lowest-N
+  masks always keep bit 0 (headpin) set → can NEVER collide with a recognized
+  split (all splits have the headpin down), so no false splits/leave stats; only
+  consequence is heatmap pin _positions_ + split _naming_ are placeholder until a
+  per-pin picker. Offline-first path, gate isolation, thin components all confirmed.
+- **Decision:** pinState records counts (N lowest bits), not pin identities —
+  documented MVP limitation. **Follow-up for the architect:** plan a future
+  "per-pin leave picker" slice so heatmap positions + split naming become exact.
+- **Gate:** root vitest 210 pass, typecheck/lint/format clean; `cd apps/mobile &&
+pnpm typecheck` exit 0. Boot manual.
+- **Commit:** `feat(mobile): add scoring entry feature (S10)` (PR #1).
+
 <!-- New iterations are appended below this line by the Tech Lead. -->

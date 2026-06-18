@@ -16,7 +16,7 @@ each iteration. Designs/notes for in-flight slices live in `docs/slices/<id>.md`
 | S7  | repository modules                    | BE persistence | S4,S5      | CI-node-sqlite | DONE   |
 | S8  | read-model adapters (rows→domain)     | BE persistence | S2,S3,S7   | CI-node-sqlite | DONE   |
 | S9  | Expo app scaffold + providers         | FE             | S6         | heavy-expo     | DONE   |
-| S10 | scoring entry feature                 | FE             | S9,S7      | heavy-expo     | TODO   |
+| S10 | scoring entry feature                 | FE             | S9,S7      | heavy-expo     | DONE   |
 | S11 | players/contacts feature              | FE             | S9,S7      | heavy-expo     | TODO   |
 | S12 | sessions feature (solo=1-participant) | FE             | S10,S11    | heavy-expo     | TODO   |
 | S13 | arsenal (balls) feature               | FE             | S9,S7,S10  | heavy-expo     | TODO   |
