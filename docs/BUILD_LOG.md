@@ -255,6 +255,7 @@ who did it, the gate result, and the commit.
   unit-testable hooks/stores with thin components/handlers verified manually.
 
 ## Iteration 11 — S19 + S20 Go sync API + Postgres migrations
+
 - **Slices:** S19 + S20 (delivered together — the API can't be tested without
   its schema) · **Dev:** BE Dev (Go) · **Reviewer:** Code Reviewer
 - **Scope:** `services/api` — chi service with `POST /sync/push` (batched ops,
@@ -286,5 +287,26 @@ who did it, the gate result, and the commit.
   12.4s fresh). JS — `pnpm exec vitest run` 188 passed, lint/format clean
   (workspace untouched).
 - **Commit:** `feat(api): add Go sync service + Postgres migrations (S19, S20)` (PR #1).
+
+## Iteration 12 — S21 generated wire types (Go→TS)
+- **Slice:** S21 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
+- **Scope:** Inverted the type direction — Go is now the source of truth for the
+  sync WIRE types. `packages/shared/generated/wire.ts` is generated from the Go
+  structs via tygo (`go run github.com/gzuidhof/tygo@latest generate`, config
+  `services/api/tygo.yaml`; added nothing to go.mod). Split the server-internal
+  LWW helpers into `services/api/internal/domain/lww.go` so tygo emits only wire
+  types from `sync.go`. `apps/mobile/src/sync/wireMap.ts` maps the outbox op ↔
+  wire `Op` and pulled rows ↔ `applyRemoteRows` input, typed against the
+  generated `@bowli/shared` types so Go drift breaks `pnpm typecheck` at one
+  seam. `@bowli/shared` re-exports `./wire`. Test-first (+7; 195 total).
+- **Review:** PASS first pass. Reviewer **regenerated** wire.ts and confirmed the
+  committed file is byte-for-byte identical (no drift, not hand-edited);
+  go.mod/go.sum untouched; the LWW-split refactor is behavior-preserving (same
+  package, domain tests green); drift guard real; no `any` (Go `any` → `unknown`).
+- **Decisions:** `OpKind = string` (tygo default; device union is assignable;
+  server `Op.Validate()` enforces valid kinds) — acceptable.
+- **Gate:** JS — vitest 195 pass, typecheck/lint/format clean. Go — gofmt/vet
+  clean, domain tests pass. Generated file prettier-ignored.
+- **Commit:** `feat(shared): generate TS wire types from Go + domain↔wire mapping (S21)` (PR #1).
 
 <!-- New iterations are appended below this line by the Tech Lead. -->
