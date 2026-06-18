@@ -9,6 +9,15 @@
  * offline and merge cleanly.
  */
 
+/**
+ * Sync WIRE types — GENERATED from the Go structs in
+ * services/api/internal/domain/sync.go (see packages/shared/generated/wire.ts).
+ * Go is the source of truth for the wire; the hand-authored domain types below
+ * are a separate vocabulary, and apps/mobile/src/sync/wireMap.ts maps between
+ * them. Re-exported here so consumers `import { Op } from '@bowli/shared'`.
+ */
+export * from '../generated/wire';
+
 export type UUID = string;
 
 /** Millisecond epoch timestamp. */

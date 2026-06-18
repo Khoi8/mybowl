@@ -1,0 +1,12 @@
+# Generated migration artifacts (drizzle-kit). Never hand-edit or reformat —
+# they must stay byte-identical to drizzle-kit's output so the journal/meta
+# checksums stay consistent and migrations remain forward-only.
+apps/mobile/drizzle/
+
+# Generated wire types (tygo, from services/api/internal/domain/sync.go). Never
+# hand-edit or reformat — regenerate from Go. Keeping prettier off it avoids a
+# spurious format diff against tygo's output.
+packages/shared/generated/
+
+# Generated CDK synth output (CloudFormation templates, asset manifests, tree).
+infra/cdk.out/

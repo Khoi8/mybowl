@@ -1,0 +1,23 @@
+{
+  "name": "@bowli/infra",
+  "version": "0.0.0",
+  "private": true,
+  "description": "AWS CDK infrastructure for bowli (Cognito + API Gateway/Lambda + Aurora Serverless v2).",
+  "scripts": {
+    "synth": "cdk synth",
+    "diff": "cdk diff",
+    "deploy": "cdk deploy --all",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.260.0",
+    "constructs": "^10.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "aws-cdk": "^2.1128.0",
+    "tsx": "^4.22.0",
+    "vitest": "^3.2.4"
+  }
+}

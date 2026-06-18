@@ -3,6 +3,19 @@
   "compilerOptions": {
     "types": []
   },
-  "include": ["packages/shared/src/**/*.ts", "apps/mobile/src/domain/**/*.ts"],
-  "exclude": ["**/*.test.ts", "node_modules"]
+  "include": [
+    "packages/shared/src/**/*.ts",
+    "packages/shared/generated/**/*.ts",
+    "apps/mobile/src/domain/**/*.ts",
+    "apps/mobile/src/db/**/*.ts",
+    "apps/mobile/src/sync/**/*.ts"
+  ],
+  "exclude": [
+    "**/*.test.ts",
+    "node_modules",
+    "apps/mobile/src/db/client.ts",
+    "apps/mobile/src/db/migrate.ts",
+    "apps/mobile/src/db/testing/memoryDb.ts",
+    "apps/mobile/src/sync/connectivity.ts"
+  ]
 }

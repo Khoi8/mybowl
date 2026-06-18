@@ -1,0 +1,5 @@
+# CDK synthesized output (generated; never commit)
+cdk.out/
+
+# dependencies
+node_modules/

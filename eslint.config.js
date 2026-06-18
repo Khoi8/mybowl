@@ -2,7 +2,26 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['**/node_modules/**', '**/coverage/**', '**/dist/**'],
+    // `client.ts` (expo-sqlite) and `sync/connectivity.ts` (NetInfo) are the
+    // sole Expo/native-coupled files; those deps aren't installed until S9, so
+    // linting them would fail import resolution. Excluded from Node typecheck
+    // (tsconfig.json) and lint alike until then.
+    ignores: [
+      '**/node_modules/**',
+      '**/coverage/**',
+      '**/dist/**',
+      'apps/mobile/src/db/client.ts',
+      'apps/mobile/src/sync/connectivity.ts',
+      // Ambient asset/module declarations (`*.sql`, the drizzle migrations
+      // bundle, NativeWind types). These use TS `declare module` glob syntax
+      // the lean non-type-aware root parser can't handle; they belong to the
+      // Expo app's own TS project (apps/mobile/tsconfig.json), not the root.
+      'apps/mobile/**/*.d.ts',
+      // infra/ is its own package (CDK + Node types) with its own tsconfig; it
+      // is not part of the lean root TS project, so the root lint skips it.
+      'infra/**',
+      '**/cdk.out/**',
+    ],
   },
   {
     files: ['**/*.ts'],
