@@ -147,6 +147,7 @@ who did it, the gate result, and the commit.
 - **Commit:** `feat(db): generate forward-only migration + Expo client boundary (S6)` (PR #1).
 
 ## Iteration 7 — S7 repository modules
+
 - **Slice:** S7 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
 - **Scope:** `db/repositories/{players,sessions,games,frames,index}.ts` — offline-
   first CRUD taking an injected `Db` handle (no global singleton). Every
@@ -164,10 +165,36 @@ who did it, the gate result, and the commit.
   (3) update/softDelete always re-stamp `syncStatus='pending'` (regression
   tested per entity). Identity model, tombstone-not-delete, frame ordering,
   one-self backstop, no-any/noUncheckedIndexedAccess all confirmed.
-- **Notes:** memoryDb excluded from root tsc (imports better-sqlite3/node:*) but
+- **Notes:** memoryDb excluded from root tsc (imports better-sqlite3/node:\*) but
   still linted; get-by-id treats tombstoned rows as gone (returns undefined),
   documented per repo.
 - **Gate:** 142 tests passing; typecheck, lint, format all green.
 - **Commit:** `feat(db): add offline-first repositories with tombstones (S7)` (PR #1).
+
+## Iteration 8 — S8 read-model adapters (rows→domain)
+- **Slice:** S8 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
+- **Scope:** `db/readmodels/{gameFrames,seriesForPlayer,h2hSessions,index}.ts` —
+  map persisted rows into the pure-domain input shapes. `loadGameFrames`/
+  `loadLeaveMasks` (per-frame leave = `pinState[1] ?? 0`, the rack facing the
+  second throw); `loadSeriesForPlayer`/`loadAllGamesForPlayer`; `loadH2HSessions`/
+  `loadWithWithout`. Sessions enumerated via `games` (null-session solo games
+  excluded from shared/h2h); deterministic ordering by UUIDv7 id. Integration
+  tests (12) seed via S7 repos → adapters → ACTUAL domain functions, asserting
+  known scores/W-L-T/margins.
+- **Review:** PASS first pass. The subtle `pinState[1]` leave-mask mapping
+  verified correct (strike ⇒ 0, never pollutes split/single-pin stats); one-way
+  dependency (domain imports nothing from db) intact; end-to-end arithmetic
+  spot-checked (300 vs 40 ⇒ +260 win; 70 vs 80 ⇒ −10 loss; unequal counts drop
+  the trailing game; with/without partitions).
+- **Notes:** `loadAllGamesForPlayer` added as a companion (whole-career solo
+  stats) beyond the backlog contract list. FE S15 should source the "bowled with
+  X N times" headline from `timesBowledWith` over h2h views, not with/without
+  `sessionsWith`.
+- **Gate:** 154 tests passing; typecheck, lint, format all green.
+- **Commit:** `feat(db): add read-model adapters wiring rows to the domain (S8)` (PR #1).
+- **Milestone:** headless persistence layer complete — schema, migrations, ids,
+  repos, and read-models, with the stats/head-to-head domain proven end-to-end
+  against real SQLite data. Remaining headless work: S17–S18 (sync). S9–S16
+  (Expo) and S19–S22 (Go/AWS) need heavier toolchains.
 
 <!-- New iterations are appended below this line by the Tech Lead. -->
