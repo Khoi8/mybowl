@@ -40,7 +40,7 @@ function migratedDb(): {
 }
 
 describe('applyMigrations: schema parity with S5', () => {
-  it('creates all 11 modeled tables', () => {
+  it('creates all 11 modeled entity tables (plus the S17 sync_ops outbox)', () => {
     const { sqlite } = migratedDb();
     const rows = sqlite
       .prepare<
@@ -49,10 +49,14 @@ describe('applyMigrations: schema parity with S5', () => {
       >("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
       .all();
     const names = new Set(rows.map((r) => r.name));
-    expect(names.size).toBe(EXPECTED_TABLES.length);
+    // The 11 entity tables (S5) plus `sync_ops`, the local-only outbox added by
+    // S17's 0001 migration. `sync_ops` is NOT an entity — it's the device sync
+    // queue — so it is asserted separately rather than folded into the model set.
+    expect(names.size).toBe(EXPECTED_TABLES.length + 1);
     for (const table of EXPECTED_TABLES) {
       expect(names.has(table)).toBe(true);
     }
+    expect(names.has('sync_ops')).toBe(true);
   });
 
   it('creates the partial one-self-player-per-account index', () => {
@@ -124,6 +128,10 @@ describe('applyMigrations: forward-only journal convention', () => {
     // migrations are added this list grows; it must never shrink or reorder,
     // and existing files must never be edited. Update this expectation only by
     // APPENDING when a new `db:generate` migration is committed.
-    expect(migrationFiles()).toEqual(['0000_sleepy_misty_knight.sql']);
+    // 0001 (S17) adds the local `sync_ops` outbox table.
+    expect(migrationFiles()).toEqual([
+      '0000_sleepy_misty_knight.sql',
+      '0001_massive_norrin_radd.sql',
+    ]);
   });
 });

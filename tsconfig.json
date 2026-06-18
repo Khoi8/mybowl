@@ -6,7 +6,8 @@
   "include": [
     "packages/shared/src/**/*.ts",
     "apps/mobile/src/domain/**/*.ts",
-    "apps/mobile/src/db/**/*.ts"
+    "apps/mobile/src/db/**/*.ts",
+    "apps/mobile/src/sync/**/*.ts"
   ],
   "exclude": [
     "**/*.test.ts",

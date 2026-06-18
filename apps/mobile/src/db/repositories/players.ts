@@ -17,6 +17,7 @@
 
 import { and, eq, isNull } from 'drizzle-orm';
 
+import { enqueueWithWrite } from '../../sync/outbox';
 import { players, type NewPlayer, type Player } from '../schema';
 import type { Db } from '../types';
 
@@ -36,36 +37,77 @@ export type PlayerPatch = Partial<{
   avatar: string | null;
 }>;
 
-/** Insert a player, returning the created row (id + sync defaults populated). */
+/**
+ * Insert a player, returning the created row (id + sync defaults populated).
+ * The insert and its 'upsert' sync op are enqueued atomically (S17).
+ */
 export function createPlayer(db: Db, input: CreatePlayerInput): Player {
   const values: NewPlayer = { name: input.name };
   if (input.isSelf !== undefined) values.isSelf = input.isSelf;
   if (input.userId !== undefined) values.userId = input.userId;
   if (input.avatar !== undefined) values.avatar = input.avatar;
 
-  const [row] = db.insert(players).values(values).returning().all();
-  if (row === undefined) throw new Error('createPlayer: insert returned no row');
-  return row;
+  return enqueueWithWrite(
+    db,
+    (tx) => {
+      const [row] = tx.insert(players).values(values).returning().all();
+      if (row === undefined) throw new Error('createPlayer: insert returned no row');
+      return row;
+    },
+    (row) => ({
+      entityTable: 'players',
+      entityId: row.id,
+      op: 'upsert',
+      payload: row,
+      entityUpdatedAt: row.updatedAt,
+    }),
+  );
 }
 
 /** Apply a patch and re-stamp sync metadata. Returns the updated row. */
 export function updatePlayer(db: Db, id: string, patch: PlayerPatch): Player {
-  const [row] = db
-    .update(players)
-    .set({ ...patch, updatedAt: Date.now(), syncStatus: 'pending' })
-    .where(eq(players.id, id))
-    .returning()
-    .all();
-  if (row === undefined) throw new Error(`updatePlayer: no player with id ${id}`);
-  return row;
+  return enqueueWithWrite(
+    db,
+    (tx) => {
+      const [row] = tx
+        .update(players)
+        .set({ ...patch, updatedAt: Date.now(), syncStatus: 'pending' })
+        .where(eq(players.id, id))
+        .returning()
+        .all();
+      if (row === undefined) throw new Error(`updatePlayer: no player with id ${id}`);
+      return row;
+    },
+    (row) => ({
+      entityTable: 'players',
+      entityId: row.id,
+      op: 'upsert',
+      payload: row,
+      entityUpdatedAt: row.updatedAt,
+    }),
+  );
 }
 
 /** Tombstone a player (soft delete). Never physically removes the row. */
 export function softDeletePlayer(db: Db, id: string): void {
-  db.update(players)
-    .set({ deletedAt: Date.now(), syncStatus: 'pending' })
-    .where(eq(players.id, id))
-    .run();
+  enqueueWithWrite(
+    db,
+    (tx) => {
+      const updatedAt = Date.now();
+      tx.update(players)
+        .set({ deletedAt: updatedAt, updatedAt, syncStatus: 'pending' })
+        .where(eq(players.id, id))
+        .run();
+      return updatedAt;
+    },
+    (updatedAt) => ({
+      entityTable: 'players',
+      entityId: id,
+      op: 'delete',
+      payload: { id },
+      entityUpdatedAt: updatedAt,
+    }),
+  );
 }
 
 /** Fetch a live player by id; tombstoned rows are treated as gone (undefined). */

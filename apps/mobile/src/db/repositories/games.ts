@@ -11,6 +11,7 @@
 
 import { and, eq, isNull } from 'drizzle-orm';
 
+import { enqueueOp, enqueueWithWrite } from '../../sync/outbox';
 import {
   frames,
   games,
@@ -73,31 +74,74 @@ function gameInsertValues(input: CreateGameInput): NewGame {
   return values;
 }
 
-/** Insert a game, returning the created row. */
+/** Build the 'upsert' op for a game row. */
+function gameUpsertOp(row: Game): {
+  entityTable: string;
+  entityId: string;
+  op: 'upsert';
+  payload: unknown;
+  entityUpdatedAt: number;
+} {
+  return {
+    entityTable: 'games',
+    entityId: row.id,
+    op: 'upsert',
+    payload: row,
+    entityUpdatedAt: row.updatedAt,
+  };
+}
+
+/** Insert a game, returning the created row. Write + 'upsert' op are atomic. */
 export function createGame(db: Db, input: CreateGameInput): Game {
-  const [row] = db.insert(games).values(gameInsertValues(input)).returning().all();
-  if (row === undefined) throw new Error('createGame: insert returned no row');
-  return row;
+  return enqueueWithWrite(
+    db,
+    (tx) => {
+      const [row] = tx.insert(games).values(gameInsertValues(input)).returning().all();
+      if (row === undefined) throw new Error('createGame: insert returned no row');
+      return row;
+    },
+    gameUpsertOp,
+  );
 }
 
 /** Apply a patch and re-stamp sync metadata. Returns the updated row. */
 export function updateGame(db: Db, id: string, patch: GamePatch): Game {
-  const [row] = db
-    .update(games)
-    .set({ ...patch, updatedAt: Date.now(), syncStatus: 'pending' })
-    .where(eq(games.id, id))
-    .returning()
-    .all();
-  if (row === undefined) throw new Error(`updateGame: no game with id ${id}`);
-  return row;
+  return enqueueWithWrite(
+    db,
+    (tx) => {
+      const [row] = tx
+        .update(games)
+        .set({ ...patch, updatedAt: Date.now(), syncStatus: 'pending' })
+        .where(eq(games.id, id))
+        .returning()
+        .all();
+      if (row === undefined) throw new Error(`updateGame: no game with id ${id}`);
+      return row;
+    },
+    gameUpsertOp,
+  );
 }
 
 /** Tombstone a game (soft delete). */
 export function softDeleteGame(db: Db, id: string): void {
-  db.update(games)
-    .set({ deletedAt: Date.now(), syncStatus: 'pending' })
-    .where(eq(games.id, id))
-    .run();
+  enqueueWithWrite(
+    db,
+    (tx) => {
+      const updatedAt = Date.now();
+      tx.update(games)
+        .set({ deletedAt: updatedAt, updatedAt, syncStatus: 'pending' })
+        .where(eq(games.id, id))
+        .run();
+      return updatedAt;
+    },
+    (updatedAt) => ({
+      entityTable: 'games',
+      entityId: id,
+      op: 'delete',
+      payload: { id },
+      entityUpdatedAt: updatedAt,
+    }),
+  );
 }
 
 /** Fetch a live game by id; tombstoned rows are treated as gone. */
@@ -143,6 +187,10 @@ export function createGameWithFrames(
     if (game === undefined)
       throw new Error('createGameWithFrames: game insert returned no row');
 
+    // One 'upsert' op per entity, all WITHIN this same transaction so the whole
+    // game + its frames + their ops land together or roll back together (S17).
+    enqueueOp(tx, gameUpsertOp(game));
+
     const insertedFrames: Frame[] = [];
     for (const fi of frameInputs) {
       const values: NewFrame = {
@@ -158,6 +206,13 @@ export function createGameWithFrames(
       if (frame === undefined) {
         throw new Error('createGameWithFrames: frame insert returned no row');
       }
+      enqueueOp(tx, {
+        entityTable: 'frames',
+        entityId: frame.id,
+        op: 'upsert',
+        payload: frame,
+        entityUpdatedAt: frame.updatedAt,
+      });
       insertedFrames.push(frame);
     }
 

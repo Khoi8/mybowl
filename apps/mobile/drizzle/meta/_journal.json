@@ -8,6 +8,13 @@
       "when": 1781740806234,
       "tag": "0000_sleepy_misty_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1781742077658,
+      "tag": "0001_massive_norrin_radd",
+      "breakpoints": true
     }
   ]
 }

@@ -172,6 +172,7 @@ who did it, the gate result, and the commit.
 - **Commit:** `feat(db): add offline-first repositories with tombstones (S7)` (PR #1).
 
 ## Iteration 8 — S8 read-model adapters (rows→domain)
+
 - **Slice:** S8 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
 - **Scope:** `db/readmodels/{gameFrames,seriesForPlayer,h2hSessions,index}.ts` —
   map persisted rows into the pure-domain input shapes. `loadGameFrames`/
@@ -196,5 +197,31 @@ who did it, the gate result, and the commit.
   repos, and read-models, with the stats/head-to-head domain proven end-to-end
   against real SQLite data. Remaining headless work: S17–S18 (sync). S9–S16
   (Expo) and S19–S22 (Go/AWS) need heavier toolchains.
+
+## Iteration 9 — S17 sync outbox
+- **Slice:** S17 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
+- **Scope:** `sync/schema.ts` (`sync_ops` table) + `sync/outbox.ts`
+  (`enqueueOp`, `enqueueWithWrite` transactional primitive, `listPendingOps`,
+  `markOpInflight/Done/Failed`). All repo mutations now route through the
+  outbox: create/update ⇒ `upsert` op, softDelete ⇒ `delete` op;
+  `createGameWithFrames` enqueues the game op + one per frame inside its single
+  transaction. New migration `0001_massive_norrin_radd.sql` (sync_ops only;
+  0000 untouched). drizzle.config multi-file schema array; root tsconfig now
+  covers `sync/**`. Test-first (outbox.test.ts; 168 total).
+- **Review:** PASS first pass. Atomicity proven BOTH directions (op-insert fail
+  ⇒ entity write rolled back; write fail ⇒ no op) via raw counts;
+  createGameWithFrames enqueues all ops in-transaction (rollback ⇒ zero ops);
+  outbox correctly a local-only queue (no entity-sync columns); status
+  transitions + attempts/lastError verified. A same-millisecond UUIDv7
+  tie-break test flake was fixed (select ops by value, not list position).
+- **Decisions:** softDelete now also bumps `updatedAt` so the delete op's
+  `entityUpdatedAt` is meaningful for S18 LWW; `payload` carries the full row on
+  upsert / `{id}` on delete; migrate.test asserts `sync_ops` separately from the
+  11 entity tables (it's a non-entity local table).
+- **Carry into S18 (non-blocking):** merge `syncOps` into the `Db` schema
+  binding (`db/types.ts`) so the drain can use typed relational reads; reconcile
+  BACKLOG S17 wording (`updatedAt`) with the shipped `entityUpdatedAt`.
+- **Gate:** 168 tests passing; typecheck, lint, format all green.
+- **Commit:** `feat(sync): add transactional outbox wiring repo writes to sync ops (S17)` (PR #1).
 
 <!-- New iterations are appended below this line by the Tech Lead. -->

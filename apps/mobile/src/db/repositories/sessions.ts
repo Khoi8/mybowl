@@ -14,6 +14,7 @@
 
 import { and, eq, isNull } from 'drizzle-orm';
 
+import { enqueueWithWrite } from '../../sync/outbox';
 import { sessionPlayers, sessions, type NewSession, type Session } from '../schema';
 import type { Db } from '../types';
 
@@ -38,7 +39,7 @@ export type SessionPatch = Partial<{
 
 export type SessionPlayerRow = typeof sessionPlayers.$inferSelect;
 
-/** Insert a session, returning the created row. */
+/** Insert a session, returning the created row. Write + 'upsert' op are atomic. */
 export function createSession(db: Db, input: CreateSessionInput): Session {
   const values: NewSession = { ownerUserId: input.ownerUserId, date: input.date };
   if (input.locationId !== undefined) values.locationId = input.locationId;
@@ -47,29 +48,67 @@ export function createSession(db: Db, input: CreateSessionInput): Session {
   if (input.isGroup !== undefined) values.isGroup = input.isGroup;
   if (input.notes !== undefined) values.notes = input.notes;
 
-  const [row] = db.insert(sessions).values(values).returning().all();
-  if (row === undefined) throw new Error('createSession: insert returned no row');
-  return row;
+  return enqueueWithWrite(
+    db,
+    (tx) => {
+      const [row] = tx.insert(sessions).values(values).returning().all();
+      if (row === undefined) throw new Error('createSession: insert returned no row');
+      return row;
+    },
+    (row) => ({
+      entityTable: 'sessions',
+      entityId: row.id,
+      op: 'upsert',
+      payload: row,
+      entityUpdatedAt: row.updatedAt,
+    }),
+  );
 }
 
 /** Apply a patch and re-stamp sync metadata. Returns the updated row. */
 export function updateSession(db: Db, id: string, patch: SessionPatch): Session {
-  const [row] = db
-    .update(sessions)
-    .set({ ...patch, updatedAt: Date.now(), syncStatus: 'pending' })
-    .where(eq(sessions.id, id))
-    .returning()
-    .all();
-  if (row === undefined) throw new Error(`updateSession: no session with id ${id}`);
-  return row;
+  return enqueueWithWrite(
+    db,
+    (tx) => {
+      const [row] = tx
+        .update(sessions)
+        .set({ ...patch, updatedAt: Date.now(), syncStatus: 'pending' })
+        .where(eq(sessions.id, id))
+        .returning()
+        .all();
+      if (row === undefined) throw new Error(`updateSession: no session with id ${id}`);
+      return row;
+    },
+    (row) => ({
+      entityTable: 'sessions',
+      entityId: row.id,
+      op: 'upsert',
+      payload: row,
+      entityUpdatedAt: row.updatedAt,
+    }),
+  );
 }
 
 /** Tombstone a session (soft delete). */
 export function softDeleteSession(db: Db, id: string): void {
-  db.update(sessions)
-    .set({ deletedAt: Date.now(), syncStatus: 'pending' })
-    .where(eq(sessions.id, id))
-    .run();
+  enqueueWithWrite(
+    db,
+    (tx) => {
+      const updatedAt = Date.now();
+      tx.update(sessions)
+        .set({ deletedAt: updatedAt, updatedAt, syncStatus: 'pending' })
+        .where(eq(sessions.id, id))
+        .run();
+      return updatedAt;
+    },
+    (updatedAt) => ({
+      entityTable: 'sessions',
+      entityId: id,
+      op: 'delete',
+      payload: { id },
+      entityUpdatedAt: updatedAt,
+    }),
+  );
 }
 
 /** Fetch a live session by id; tombstoned rows are treated as gone. */
@@ -102,17 +141,43 @@ export function addSessionPlayer(
   };
   if (input.turnOrder !== undefined) values.turnOrder = input.turnOrder;
 
-  const [row] = db.insert(sessionPlayers).values(values).returning().all();
-  if (row === undefined) throw new Error('addSessionPlayer: insert returned no row');
-  return row;
+  return enqueueWithWrite(
+    db,
+    (tx) => {
+      const [row] = tx.insert(sessionPlayers).values(values).returning().all();
+      if (row === undefined) throw new Error('addSessionPlayer: insert returned no row');
+      return row;
+    },
+    (row) => ({
+      entityTable: 'session_players',
+      entityId: row.id,
+      op: 'upsert',
+      payload: row,
+      entityUpdatedAt: row.updatedAt,
+    }),
+  );
 }
 
 /** Tombstone a session-player join row. */
 export function softDeleteSessionPlayer(db: Db, id: string): void {
-  db.update(sessionPlayers)
-    .set({ deletedAt: Date.now(), syncStatus: 'pending' })
-    .where(eq(sessionPlayers.id, id))
-    .run();
+  enqueueWithWrite(
+    db,
+    (tx) => {
+      const updatedAt = Date.now();
+      tx.update(sessionPlayers)
+        .set({ deletedAt: updatedAt, updatedAt, syncStatus: 'pending' })
+        .where(eq(sessionPlayers.id, id))
+        .run();
+      return updatedAt;
+    },
+    (updatedAt) => ({
+      entityTable: 'session_players',
+      entityId: id,
+      op: 'delete',
+      payload: { id },
+      entityUpdatedAt: updatedAt,
+    }),
+  );
 }
 
 /** List a session's live participants. */
