@@ -29,6 +29,7 @@ import {
 } from 'drizzle-orm/sqlite-core';
 
 import { uuidv7 } from './id';
+import { syncOps } from '../sync/schema';
 
 /**
  * Columns present on EVERY syncable table. Factored out to guarantee every
@@ -224,7 +225,21 @@ export const laneConditionLogs = sqliteTable('lane_condition_logs', {
 // Schema aggregate + inferred types
 // ---------------------------------------------------------------------------
 
-/** All tables, for `drizzle(sqlite, { schema })` and drizzle-kit generation. */
+/**
+ * All tables bound into the Drizzle handle (`drizzle(sqlite, { schema })`) and
+ * therefore into the `Db` type that every repository and the sync layer accept.
+ *
+ * S18 carry-over: this aggregate now also includes the local sync outbox
+ * (`syncOps`, from `../sync/schema`) so the `Db` schema binding is complete and
+ * the sync code (`outbox`/`drain`) operates against the full, typed schema
+ * rather than reaching for an out-of-band table.
+ *
+ * No import cycle: `sync/schema.ts` imports only `../db/id` (the UUIDv7
+ * generator), never this module, so `db/schema → sync/schema → db/id` is a
+ * straight line. `drizzle.config.ts` still lists both schema files explicitly
+ * for migration generation; this re-export does not change the generated DDL
+ * (the same `syncOps` table object is referenced from both places).
+ */
 export const schema = {
   users,
   players,
@@ -237,6 +252,7 @@ export const schema = {
   games,
   frames,
   laneConditionLogs,
+  syncOps,
 } as const;
 
 export type Player = typeof players.$inferSelect;

@@ -199,6 +199,7 @@ who did it, the gate result, and the commit.
   (Expo) and S19–S22 (Go/AWS) need heavier toolchains.
 
 ## Iteration 9 — S17 sync outbox
+
 - **Slice:** S17 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
 - **Scope:** `sync/schema.ts` (`sync_ops` table) + `sync/outbox.ts`
   (`enqueueOp`, `enqueueWithWrite` transactional primitive, `listPendingOps`,
@@ -223,5 +224,33 @@ who did it, the gate result, and the commit.
   BACKLOG S17 wording (`updatedAt`) with the shipped `entityUpdatedAt`.
 - **Gate:** 168 tests passing; typecheck, lint, format all green.
 - **Commit:** `feat(sync): add transactional outbox wiring repo writes to sync ops (S17)` (PR #1).
+
+## Iteration 10 — S18 LWW reconciliation + drain
+- **Slice:** S18 · **Dev:** BE Dev · **Reviewer:** Code Reviewer
+- **Scope:** `sync/reconcile.ts` (`reconcile` LWW decision + `applyRemoteRows`),
+  `sync/drain.ts` (push pending ops via injected transport + `drainPull` helper),
+  `sync/connectivity.ts` (Expo NetInfo stub, excluded from Node lanes). Also
+  folded the S17 carry-over: merged `syncOps` into the `schema` aggregate (no
+  import cycle: db/schema → sync/schema → db/id). Test-first (+20; 188 total).
+- **Review:** PASS first pass. Verified: LWW is a deterministic total order over
+  (updatedAt, isTombstone, id) and converges symmetrically on both peers;
+  applyRemoteRows marks pulled rows `synced` and never clobbers a newer local
+  edit; drain is idempotent/retry-safe (failed ops re-pushed, done never
+  re-pushed, UUIDv7 order); the `as unknown as {id}` cast is contained/safe
+  (entity tables all get `id` from `syncColumns()`).
+- **Decisions:** LWW tie rule = tombstone wins, else higher UUIDv7 id, else
+  keep-local; `inflight` ops are retryable (recover from a crash mid-drain;
+  safe because server LWW upserts are idempotent); full multi-device pull
+  deferred to S19 (push fully implemented; pull-apply unit-tested via
+  applyRemoteRows).
+- **Gate:** 188 tests passing; typecheck, lint, format all green.
+- **Commit:** `feat(sync): add LWW reconciliation and outbox drain (S18)` (PR #1).
+- **MILESTONE — headless lane complete (10/22 slices).** Pure domain (scoring,
+  validation, splits, stats, head-to-head) + persistence (ids, schema,
+  migrations, repos, read-models) + sync (outbox, reconciliation, drain), all
+  test-proven in plain Node with 188 tests. Remaining: S9–S16 (Expo UI,
+  heavy-expo) and S19–S22 (Go/Postgres/Cognito/CDK, heavy-go-aws) — need
+  toolchains beyond the headless container; logic in those lands in
+  unit-testable hooks/stores with thin components/handlers verified manually.
 
 <!-- New iterations are appended below this line by the Tech Lead. -->

@@ -2,14 +2,16 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    // `client.ts` is the sole Expo-coupled file; `expo-sqlite` isn't installed
-    // until S9, so linting it would fail import resolution. Excluded from Node
-    // typecheck (tsconfig.json) and lint alike until then.
+    // `client.ts` (expo-sqlite) and `sync/connectivity.ts` (NetInfo) are the
+    // sole Expo/native-coupled files; those deps aren't installed until S9, so
+    // linting them would fail import resolution. Excluded from Node typecheck
+    // (tsconfig.json) and lint alike until then.
     ignores: [
       '**/node_modules/**',
       '**/coverage/**',
       '**/dist/**',
       'apps/mobile/src/db/client.ts',
+      'apps/mobile/src/sync/connectivity.ts',
     ],
   },
   {
