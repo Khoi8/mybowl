@@ -476,4 +476,25 @@ pnpm typecheck` exit 0. Boot manual.
   100%); `cd apps/mobile && pnpm typecheck` exit 0. Boot manual.
 - **Commit:** `feat(mobile): add solo stats feature (S14)` (PR #1).
 
+## Iteration 20 — S15 relational stats feature
+
+- **Slice:** S15 · **Dev:** FE Dev · **Reviewer:** Code Reviewer · **Lane:** heavy-expo
+- **Scope:** `features/stats/relational/` — pure `loadRelationalStats(db, self,
+opp)` (read-models → `headToHead`/`withWithout`/`timesBowledWith`, RN-free,
+  root-tested) behind a thin `useHeadToHead` TanStack Query hook;
+  `RelationalStatsScreen` shows W-L-T + gamesPaired, avgMargin (self−opp),
+  your-vs-their avg together, with/without comparison, and the headline
+  "you've bowled with X N times" (from `timesBowledWith`, per the S8 note).
+  PlayersScreen contacts now tap through to head-to-head. Test-first (+4; 247).
+- **Review:** PASS first pass. Reviewer hand-verified the arithmetic (300/40,
+  70/80, 90/60 + dropped trailing 20 ⇒ 2W-1L-0T, gamesPaired 3, avgMargin 280/3,
+  selfAvg 460/3, opponentAvg 60; WITH avg counts all 4 shared games = 120,
+  WITHOUT = solo 60) — H2H drops the remainder while with-averages count all
+  games, exactly per §8. Headline N from `timesBowledWith`; zero-shared empty
+  state nudges contact reuse (fragmentation point); guest==linked; gate
+  isolation; no `any`.
+- **Gate:** root vitest 247, typecheck/lint/format clean; `cd apps/mobile &&
+pnpm typecheck` exit 0. Boot manual.
+- **Commit:** `feat(mobile): add relational (head-to-head) stats feature (S15)` (PR #1).
+
 <!-- New iterations are appended below this line by the Tech Lead. -->

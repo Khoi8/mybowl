@@ -14,12 +14,20 @@ import { SessionScreen } from '../features/sessions/SessionScreen';
 import { NewSessionScreen } from '../features/sessions/NewSessionScreen';
 import { ArsenalScreen } from '../features/arsenal/ArsenalScreen';
 import { SoloStatsScreen } from '../features/stats/SoloStatsScreen';
+import { RelationalStatsScreen } from '../features/stats/relational/RelationalStatsScreen';
 
 /** Route name → params map. Widened per-slice as features land. */
 export type RootStackParamList = {
   Sessions: undefined;
   /** Solo stats for one bowler — `playerId` is whose stats to recompute. */
   Stats: { playerId: string };
+  /**
+   * Relational ("head-to-head") stats between the self player and one opponent.
+   * `opponentName` is carried for the "you've bowled with <name> N times"
+   * headline so the screen needn't reload the contact list. All math keys on
+   * the two ids (a guest opponent behaves identically to a linked one).
+   */
+  Relational: { selfPlayerId: string; opponentPlayerId: string; opponentName: string };
   Arsenal: undefined;
   /** Persistent contacts you bowl with (self + guests + linked accounts). */
   Players: undefined;
@@ -64,6 +72,11 @@ export function RootNavigation(): React.JSX.Element {
             name="Stats"
             component={SoloStatsScreen}
             options={{ title: 'Stats' }}
+          />
+          <Stack.Screen
+            name="Relational"
+            component={RelationalStatsScreen}
+            options={{ title: 'Head-to-head' }}
           />
           <Stack.Screen name="Arsenal" component={ArsenalScreen} />
           <Stack.Screen name="Players" component={PlayersScreen} />

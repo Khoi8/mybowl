@@ -21,7 +21,7 @@ each iteration. Designs/notes for in-flight slices live in `docs/slices/<id>.md`
 | S12 | sessions feature (solo=1-participant) | FE             | S10,S11    | heavy-expo     | DONE   |
 | S13 | arsenal (balls) feature               | FE             | S9,S7,S10  | heavy-expo     | DONE   |
 | S14 | solo stats feature                    | FE             | S2,S8,S12  | heavy-expo     | DONE   |
-| S15 | relational stats feature              | FE             | S3,S8,S12  | heavy-expo     | TODO   |
+| S15 | relational stats feature              | FE             | S3,S8,S12  | heavy-expo     | DONE   |
 | S16 | lane conditions feature               | FE+persistence | S5,S7,S12  | heavy-expo     | TODO   |
 | S17 | sync outbox: ops table + enqueue      | BE sync        | S5,S7      | CI-node-sqlite | DONE   |
 | S18 | LWW reconciliation + drain            | BE sync        | S17        | CI-node-sqlite | DONE   |
