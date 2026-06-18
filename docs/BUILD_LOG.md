@@ -417,4 +417,26 @@ pnpm typecheck` exit 0. Boot manual.
 pnpm typecheck` exit 0. Boot manual.
 - **Commit:** `feat(mobile): add players/contacts feature (S11)` (PR #1).
 
+## Iteration 17 — S12 sessions feature (solo = one-participant)
+
+- **Slice:** S12 · **Dev:** FE Dev · **Reviewer:** Code Reviewer · **Lane:** heavy-expo
+- **Scope:** `features/sessions/` — RN-free store (`createSession`,
+  `addParticipant`, `startSolo`, `gameMetaFor`, `listParticipants`,
+  `listSessionGamesByPlayer`), `useSession` hook, `SessionScreen`/
+  `NewSessionScreen`/`ParticipantList` (.tsx). `startSolo` delegates to the SAME
+  `createSession`+`addSessionPlayer` as group outings (no solo path).
+  `gameMetaFor` inherits session context into the game meta the scoring `commit`
+  consumes; ScoreEntryScreen now forwards that inherited context. Test-first
+  (+7; 227 total).
+- **Review:** PASS first pass. Verified the solo-is-one-participant proof is
+  genuine (same row shape; only `isGroup`+count differ; same table/functions),
+  context inheritance end-to-end (commit → read back matches session), identity
+  model (addParticipant links existing players only), gate isolation, no `any`.
+- **Decisions:** ownerUserId derived from the self player's `userId` (Cognito
+  parked) with a guard; `Sessions` route opens the create-outing flow (dedicated
+  sessions-list is later scope).
+- **Gate:** root vitest 227, typecheck/lint/format clean; `cd apps/mobile &&
+pnpm typecheck` exit 0. Boot manual.
+- **Commit:** `feat(mobile): add sessions feature, solo as one-participant (S12)` (PR #1).
+
 <!-- New iterations are appended below this line by the Tech Lead. -->

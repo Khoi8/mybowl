@@ -25,7 +25,8 @@ function today(): string {
 }
 
 export function ScoreEntryScreen({ route, navigation }: Props): React.JSX.Element {
-  const { ownerUserId, playerId, sessionId } = route.params;
+  const { ownerUserId, playerId, sessionId, date, locationId, lane, oilPatternId } =
+    route.params;
   const {
     frames,
     currentFrame,
@@ -41,7 +42,16 @@ export function ScoreEntryScreen({ route, navigation }: Props): React.JSX.Elemen
 
   const onSave = (): void => {
     // Offline-first: write straight to SQLite; the repo enqueues the sync op.
-    commit(getDb(), { ownerUserId, playerId, date: today(), sessionId });
+    // Session context (location/lane/oil) is INHERITED via route params (S12).
+    commit(getDb(), {
+      ownerUserId,
+      playerId,
+      date: date ?? today(),
+      sessionId,
+      locationId,
+      lane,
+      oilPatternId,
+    });
     navigation.goBack();
   };
 

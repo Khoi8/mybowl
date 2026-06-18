@@ -12,6 +12,8 @@ import { Text, View } from 'react-native';
 
 import { ScoreEntryScreen } from '../features/scoring/ScoreEntryScreen';
 import { PlayersScreen } from '../features/players/PlayersScreen';
+import { SessionScreen } from '../features/sessions/SessionScreen';
+import { NewSessionScreen } from '../features/sessions/NewSessionScreen';
 
 /** Route name → params map. Widened per-slice as features land. */
 export type RootStackParamList = {
@@ -20,15 +22,25 @@ export type RootStackParamList = {
   Arsenal: undefined;
   /** Persistent contacts you bowl with (self + guests + linked accounts). */
   Players: undefined;
+  /** Create an outing (solo or group) + add participants. */
+  NewSession: undefined;
+  /** A single outing: participants and their games. */
+  Session: { sessionId: string };
   /**
    * Manual scoring entry. The caller (a session/solo flow, S12) supplies whose
    * game this is — `ownerUserId` is the recording account, `playerId` is the
-   * bowler. `sessionId` is omitted/null for a solo game.
+   * bowler. `sessionId` is omitted/null for a solo game. The session's context
+   * (`locationId`/`lane`/`oilPatternId`) is INHERITED here and stamped onto the
+   * committed game — the screen never re-types it.
    */
   Score: {
     ownerUserId: string;
     playerId: string;
     sessionId?: string | null;
+    date?: string;
+    locationId?: string | null;
+    lane?: string | null;
+    oilPatternId?: string | null;
   };
 };
 
@@ -41,10 +53,6 @@ function Placeholder({ title }: { readonly title: string }): React.JSX.Element {
       <Text className="text-lg font-semibold">{title}</Text>
     </View>
   );
-}
-
-function SessionsScreen(): React.JSX.Element {
-  return <Placeholder title="Sessions" />;
 }
 
 function StatsScreen(): React.JSX.Element {
@@ -61,7 +69,13 @@ export function RootNavigation(): React.JSX.Element {
     <SafeAreaProvider>
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Sessions">
-          <Stack.Screen name="Sessions" component={SessionsScreen} />
+          <Stack.Screen
+            name="Sessions"
+            component={NewSessionScreen}
+            options={{ title: 'New session' }}
+          />
+          <Stack.Screen name="NewSession" component={NewSessionScreen} />
+          <Stack.Screen name="Session" component={SessionScreen} />
           <Stack.Screen name="Stats" component={StatsScreen} />
           <Stack.Screen name="Arsenal" component={ArsenalScreen} />
           <Stack.Screen name="Players" component={PlayersScreen} />
